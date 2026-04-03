@@ -79,12 +79,12 @@ export async function fetchAuthorizedJson(endpoint: string): Promise<any> {
     throw new Error('Not authenticated')
   }
 
-  // Use the LLM Proxy port for API endpoints as Nginx /api/ routes to the old HTTP backend
+  // Use the standard HTTP backend port 6185 (or base url) instead of LLM proxy 16686
   let url = endpoint
   if (url.startsWith('/api/')) {
-    url = `http://43.160.252.207:16686${url}`
+    url = `${getBaseUrl()}${url}`
   } else if (!url.startsWith('http')) {
-    url = `http://43.160.252.207:16686${url.startsWith('/') ? '' : '/'}${url}`
+    url = `${getBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`
   }
 
   const response = await fetch(url, {
@@ -127,6 +127,11 @@ export async function login(username: string, password: string): Promise<TwoPixe
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
       localStorage.setItem(BALANCE_STORAGE_KEY, String(user.balance || 0))
       localStorage.setItem(IS_ADMIN_STORAGE_KEY, String(user.is_admin ? 1 : 0))
+      
+      // Sync token to main process platform adapter
+      if ((window as any).electronAPI?.syncTwoPixelToken) {
+        (window as any).electronAPI.syncTwoPixelToken(data.token)
+      }
       
       return {
         success: true,
@@ -199,6 +204,10 @@ export async function register(
       localStorage.setItem(BALANCE_STORAGE_KEY, String(user.balance || 10))
       localStorage.setItem(IS_ADMIN_STORAGE_KEY, String(user.is_admin ? 1 : 0))
       
+      if ((window as any).electronAPI?.syncTwoPixelToken) {
+        (window as any).electronAPI.syncTwoPixelToken(data.token)
+      }
+      
       return {
         success: true,
         token: data.token,
@@ -267,6 +276,10 @@ export function logout(): void {
   localStorage.removeItem(USER_STORAGE_KEY)
   localStorage.removeItem(BALANCE_STORAGE_KEY)
   localStorage.removeItem(IS_ADMIN_STORAGE_KEY)
+  
+  if ((window as any).electronAPI?.syncTwoPixelToken) {
+    (window as any).electronAPI.syncTwoPixelToken(null)
+  }
 }
 
 export async function validateToken(): Promise<boolean> {

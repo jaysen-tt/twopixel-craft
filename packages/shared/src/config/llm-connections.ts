@@ -968,7 +968,8 @@ export const TWOPIXEL_BUILTIN_CONNECTION: LlmConnection = {
   slug: 'twopixel-built-in',
   name: 'TwoPixel AI',
   providerType: 'pi_compat',
-  baseUrl: 'http://43.160.252.207:16686/v1',
+  // Use the Nginx reverse proxied /api/v1/ route which proxies to LLM Proxy (16686) via /api/ prefix logic
+  baseUrl: 'https://api.2pixel.cn/api/v1',
   authType: 'api_key_with_endpoint',
   customEndpoint: { api: 'openai-completions' },
   piAuthProvider: 'openai',

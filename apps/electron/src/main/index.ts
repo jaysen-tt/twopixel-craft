@@ -530,6 +530,7 @@ app.whenReady().then(async () => {
     const platformAdapter = new TwoPixelPlatformAdapter({
       url: gatewayUrl,
       clientId: `desktop-${machineId.slice(0, 8)}`,
+      token: undefined, // Will be set via IPC __sync-twopixel-token
       onConnect: () => mainLog.info('[TwoPixelPlatform] Connected to Gateway'),
       onDisconnect: () => mainLog.warn('[TwoPixelPlatform] Disconnected from Gateway'),
       onMessage: async (msg) => {
@@ -653,6 +654,24 @@ app.whenReady().then(async () => {
         mainLog.info(message, context)
       }
     })
+
+    // Get TwoPixel Token for Main Process Adapter. Note: This relies on preload's sync IPC handler 
+    // or renderer calling it, so we use a callback pattern from renderer instead.
+    // We will listen for a token sync event from the renderer instead of trying to read localStorage here.
+    let currentTwoPixelToken: string | null = null;
+    ipcMain.on('__sync-twopixel-token', (_event, token: string | null) => {
+      currentTwoPixelToken = token;
+      mainLog.info(`[TwoPixelPlatform] Synced token from renderer: ${token ? 'set' : 'cleared'}`);
+      
+      // Update adapter options if it exists
+      if (platformAdapter) {
+         (platformAdapter as any).options.token = token;
+         // If we have a token and we are not connected, try to connect
+         if (token && (platformAdapter as any).isClosed !== true && !(platformAdapter as any).ws) {
+            platformAdapter.connect();
+         }
+      }
+    });
 
     // Dialog bridge — preload capability handlers use ipcRenderer.invoke to
     // call main-process-only dialog APIs (dialog, BrowserWindow).

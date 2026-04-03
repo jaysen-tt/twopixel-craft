@@ -417,4 +417,7 @@ client.onConnectionStateChanged((state) => {
   downloadUrl: process.env.CRAFT_VCREDIST_URL,
 })
 
+// Sync token to main process adapter
+;(api as any).syncTwoPixelToken = (token: string | null) => ipcRenderer.send('__sync-twopixel-token', token)
+
 contextBridge.exposeInMainWorld('electronAPI', api)

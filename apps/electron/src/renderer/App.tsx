@@ -108,6 +108,11 @@ async function ensureTwoPixelBuiltInCredential(): Promise<void> {
       slug: 'twopixel-built-in',
       credential: token,
     })
+    
+    // Sync token to main process platform adapter
+    if ((window.electronAPI as any).syncTwoPixelToken) {
+      (window.electronAPI as any).syncTwoPixelToken(token)
+    }
   } catch (error) {
     console.warn('[TwoPixel] Failed to sync built-in LLM credential:', error)
   }

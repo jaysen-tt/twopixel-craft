@@ -146,7 +146,7 @@ export class TwoPixelPlatformAdapter {
     // 发送认证帧
     this.send({
       type: 'auth',
-      token: this.options.token || '',
+      token: this.options.token || 'twopixel_builtin_token',
       client_role: 'desktop',
       client_id: this.options.clientId,
       timestamp: Date.now()
