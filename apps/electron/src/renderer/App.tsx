@@ -134,12 +134,12 @@ function handleBackgroundTaskEvent(
   // Type guard for accessing properties
   const evt = agentEvent as Record<string, unknown>
   const backgroundTasksAtom = backgroundTasksAtomFamily(sessionId)
+  const currentTasks = store.get(backgroundTasksAtom) as any[]
 
   if (event.type === 'task_backgrounded' && 'taskId' in evt && 'toolUseId' in evt) {
-    const currentTasks = store.get(backgroundTasksAtom)
-    const exists = currentTasks.some(t => t.toolUseId === evt.toolUseId)
+    const exists = currentTasks.some((t: any) => t.toolUseId === evt.toolUseId)
     if (!exists) {
-      store.set(backgroundTasksAtom, [
+      store.set(backgroundTasksAtom as any, [
         ...currentTasks,
         {
           id: evt.taskId as string,
@@ -152,10 +152,9 @@ function handleBackgroundTaskEvent(
       ])
     }
   } else if (event.type === 'shell_backgrounded' && 'shellId' in evt && 'toolUseId' in evt) {
-    const currentTasks = store.get(backgroundTasksAtom)
-    const exists = currentTasks.some(t => t.toolUseId === evt.toolUseId)
+    const exists = currentTasks.some((t: any) => t.toolUseId === evt.toolUseId)
     if (!exists) {
-      store.set(backgroundTasksAtom, [
+      store.set(backgroundTasksAtom as any, [
         ...currentTasks,
         {
           id: evt.shellId as string,
@@ -168,20 +167,17 @@ function handleBackgroundTaskEvent(
       ])
     }
   } else if (event.type === 'task_progress' && 'toolUseId' in evt && 'elapsedSeconds' in evt) {
-    const currentTasks = store.get(backgroundTasksAtom)
-    store.set(backgroundTasksAtom, currentTasks.map(t =>
+    store.set(backgroundTasksAtom as any, currentTasks.map((t: any) =>
       t.toolUseId === evt.toolUseId
         ? { ...t, elapsedSeconds: evt.elapsedSeconds as number }
         : t
     ))
   } else if (event.type === 'task_completed' && 'taskId' in evt) {
     // Remove task when background task completes
-    const currentTasks = store.get(backgroundTasksAtom)
-    store.set(backgroundTasksAtom, currentTasks.filter(t => t.id !== evt.taskId))
+    store.set(backgroundTasksAtom as any, currentTasks.filter((t: any) => t.id !== evt.taskId))
   } else if (event.type === 'shell_killed' && 'shellId' in evt) {
     // Remove shell task when KillShell succeeds
-    const currentTasks = store.get(backgroundTasksAtom)
-    store.set(backgroundTasksAtom, currentTasks.filter(t => t.id !== evt.shellId))
+    store.set(backgroundTasksAtom as any, currentTasks.filter((t: any) => t.id !== evt.shellId))
   } else if (event.type === 'tool_result' && 'toolUseId' in evt) {
     // Remove task when it completes - but NOT if this is the initial backgrounding result
     // Background tasks return immediately with agentId/shell_id/backgroundTaskId,
@@ -193,8 +189,8 @@ function handleBackgroundTaskEvent(
       /"backgroundTaskId":\s*"[a-zA-Z0-9_-]+"/.test(result)
     )
     if (!isBackgroundingResult) {
-      const currentTasks = store.get(backgroundTasksAtom)
-      store.set(backgroundTasksAtom, currentTasks.filter(t => t.toolUseId !== evt.toolUseId))
+      const currentTasksForTool = store.get(backgroundTasksAtom) as any[]
+      store.set(backgroundTasksAtom as any, currentTasksForTool.filter((t: any) => t.toolUseId !== evt.toolUseId))
     }
   }
   // Note: We do NOT clear background tasks on complete/error/interrupted
@@ -537,7 +533,8 @@ export default function App() {
       }
 
       for (const session of sessions) {
-        const currentSession = store.get(sessionAtomFamily(session.id))
+        const sessionAtom = sessionAtomFamily(session.id)
+        const currentSession = store.get(sessionAtom) as any
         const shouldPreserveMessages = !!currentSession && loadedSessionIds.has(session.id)
         const nextSession = shouldPreserveMessages && currentSession
           ? {
@@ -546,7 +543,7 @@ export default function App() {
             }
           : session
 
-        store.set(sessionAtomFamily(session.id), nextSession)
+        store.set(sessionAtom as any, nextSession)
 
         syncSessionOptionsFromSession(session)
         void reconcilePermissionModeState(session.id)
@@ -791,7 +788,7 @@ export default function App() {
             })
 
             // Native notification for approval-required pauses (same gating as completion notifications)
-            const notifySession = store.get(sessionAtomFamily(sessionId))
+            const notifySession = store.get(sessionAtomFamily(sessionId)) as any
             if (notifySession && !notifySession.hidden) {
               const isAdminPrompt = effect.request.type === 'admin_approval'
               const promptBody = isAdminPrompt
@@ -934,7 +931,7 @@ export default function App() {
       }
 
       // Check if session is currently streaming (atom is source of truth)
-      const atomSession = store.get(sessionAtomFamily(sessionId))
+      const atomSession = store.get(sessionAtomFamily(sessionId)) as any
       const isStreaming = atomSession?.isProcessing === true
       const isHandoff = handoffEventTypes.has(event.type)
 
@@ -951,7 +948,7 @@ export default function App() {
         )
 
         // Update atom directly (UI sees update immediately)
-        updateSessionDirect(sessionId, () => updatedSession)
+        updateSessionDirect(sessionId, () => updatedSession as any)
 
         // Handle side effects
         handleEffects(effects, sessionId, event.type)
@@ -965,20 +962,20 @@ export default function App() {
           // Update metadata map
           const metaMap = store.get(sessionMetaMapAtom)
           const newMetaMap = new Map(metaMap)
-          newMetaMap.set(sessionId, extractSessionMeta(updatedSession))
+          newMetaMap.set(sessionId, extractSessionMeta(updatedSession as any))
           store.set(sessionMetaMapAtom, newMetaMap)
 
           // Show notification on complete (when window is not focused)
           // Skip hidden sessions (mini-agent sessions) - they shouldn't trigger notifications
-          if (event.type === 'complete' && !updatedSession.hidden) {
+          if (event.type === 'complete' && !(updatedSession as any).hidden) {
             // Get the last assistant/plan message as preview
-            const lastMessage = updatedSession.messages.findLast(
-              m => (m.role === 'assistant' || m.role === 'plan') && !m.isIntermediate
+            const lastMessage = (updatedSession as any).messages.findLast(
+              (m: any) => (m.role === 'assistant' || m.role === 'plan') && !m.isIntermediate
             )
             // Strip markdown so OS notifications display clean plain text
             const rawPreview = lastMessage?.content?.substring(0, 200) || undefined
             const preview = rawPreview ? stripMarkdown(rawPreview).substring(0, 100) || undefined : undefined
-            showSessionNotification(updatedSession, preview)
+            showSessionNotification(updatedSession as any, preview)
           }
         }
 
@@ -986,7 +983,7 @@ export default function App() {
       }
 
       // Not streaming: use per-session atoms directly (no sessionsAtom)
-      const currentSession = store.get(sessionAtomFamily(sessionId))
+      const currentSession = store.get(sessionAtomFamily(sessionId)) as any
 
       const { session: updatedSession, effects } = processAgentEvent(
         agentEvent,
@@ -1001,12 +998,12 @@ export default function App() {
       handleBackgroundTaskEvent(store, sessionId, event, agentEvent)
 
       // Update per-session atom
-      updateSessionDirect(sessionId, () => updatedSession)
+      updateSessionDirect(sessionId, () => updatedSession as any)
 
       // Update metadata map
       const metaMap = store.get(sessionMetaMapAtom)
       const newMetaMap = new Map(metaMap)
-      newMetaMap.set(sessionId, extractSessionMeta(updatedSession))
+      newMetaMap.set(sessionId, extractSessionMeta(updatedSession as any))
       store.set(sessionMetaMapAtom, newMetaMap)
     })
 

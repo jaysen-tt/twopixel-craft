@@ -15,7 +15,6 @@ i18n
     resources,
     lng: 'zh-CN',
     fallbackLng: 'en-US',
-    initImmediate: false,
     interpolation: {
       escapeValue: false,
     },

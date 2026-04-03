@@ -1,5 +1,4 @@
 import { SessionManager } from '../SessionManager.ts';
-import { ManagedSession } from '../types.ts';
 import type { AgentEvent } from '@craft-agent/shared/agent';
 import * as os from 'os';
 import * as path from 'path';
@@ -12,7 +11,7 @@ async function runTests() {
   console.log('--- Test 1: Intercept HEARTBEAT_OK ---');
   
   // We don't need a full real SessionManager, we just test the handleSessionEvent logic
-  const sm = new SessionManager(testConfigDir);
+  const sm = new SessionManager();
   
   const mockManaged: any = {
     id: 'test-session',

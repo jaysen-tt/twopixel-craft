@@ -8,7 +8,7 @@
  * caused re-renders and focus loss in Session B.
  */
 
-import { atom } from 'jotai'
+import { atom, type PrimitiveAtom } from 'jotai'
 import { atomFamily } from 'jotai-family'
 import type { Session, Message } from '../../shared/types'
 
@@ -118,7 +118,7 @@ export function extractSessionMeta(session: Session): SessionMeta {
  * Atom family for individual session state
  * Each session gets its own atom - updates are isolated
  */
-export const sessionAtomFamily = atomFamily(
+export const sessionAtomFamily = atomFamily<string, any>(
   (_sessionId: string) => atom<Session | null>(null),
   (a, b) => a === b
 )
@@ -170,7 +170,7 @@ export const updateSessionAtom = atom(
   null,
   (get, set, sessionId: string, updater: (prev: Session | null) => Session | null) => {
     const sessionAtom = sessionAtomFamily(sessionId)
-    const currentSession = get(sessionAtom)
+    const currentSession = get(sessionAtom) as Session | null
     const newSession = updater(currentSession)
     set(sessionAtom, newSession)
 
@@ -211,7 +211,7 @@ export const appendMessageAtom = atom(
   null,
   (get, set, sessionId: string, message: Message) => {
     const sessionAtom = sessionAtomFamily(sessionId)
-    const session = get(sessionAtom)
+    const session = get(sessionAtom) as Session | null
     if (session) {
       set(sessionAtom, {
         ...session,
@@ -230,7 +230,7 @@ export const updateStreamingContentAtom = atom(
   null,
   (get, set, sessionId: string, content: string, turnId?: string) => {
     const sessionAtom = sessionAtomFamily(sessionId)
-    const session = get(sessionAtom)
+    const session = get(sessionAtom) as Session | null
     if (!session) return
 
     const messages = [...session.messages]
@@ -377,7 +377,7 @@ export const syncSessionsToAtomsAtom = atom(
     // Update each session atom
     for (const session of sessions) {
       const sessionAtom = sessionAtomFamily(session.id)
-      const atomSession = get(sessionAtom)
+      const atomSession = get(sessionAtom) as Session | null
 
       // CRITICAL: If the atom's session is processing, it has streaming updates
       // that React state doesn't know about yet. Don't overwrite - atom is
@@ -413,7 +413,7 @@ export const syncSessionsToAtomsAtom = atom(
       const meta = extractSessionMeta(session)
       // Preserve isProcessing from atom if atom is processing
       // React state may have stale isProcessing: false during streaming
-      const atomSession = get(sessionAtomFamily(session.id))
+      const atomSession = get(sessionAtomFamily(session.id)) as Session | null
       if (atomSession?.isProcessing) {
         meta.isProcessing = true
       }
@@ -469,7 +469,7 @@ export const ensureSessionMessagesLoadedAtom = atom(
       // because optimistic updates may have changed them since the disk write.
       // tokenUsage and sessionFolderPath are only returned by getSession() (not getSessions()),
       // so they must be explicitly merged here to be available after app restart.
-      const existingSession = get(sessionAtomFamily(sessionId))
+      const existingSession = get(sessionAtomFamily(sessionId)) as Session | null
       const mergedSession = existingSession
         ? {
             ...existingSession,
@@ -485,7 +485,7 @@ export const ensureSessionMessagesLoadedAtom = atom(
               : loadedSession.messages,
             tokenUsage: loadedSession.tokenUsage ?? existingSession.tokenUsage,
             sessionFolderPath: loadedSession.sessionFolderPath ?? existingSession.sessionFolderPath,
-          }
+          } as Session
         : loadedSession
       set(sessionAtomFamily(sessionId), mergedSession)
 
@@ -546,7 +546,7 @@ export interface BackgroundTask {
  * Updated on task_backgrounded, shell_backgrounded, task_progress events
  * Cleared when tasks complete or are killed
  */
-export const backgroundTasksAtomFamily = atomFamily(
+export const backgroundTasksAtomFamily = atomFamily<string, any>(
   (_sessionId: string) => atom<BackgroundTask[]>([]),
   (a, b) => a === b
 )

@@ -196,7 +196,7 @@ export function useAppShellContext(): AppShellContextType {
  */
 export function useSession(sessionId: string): Session | null {
   // Use per-session atom for isolated updates
-  return useAtomValue(sessionAtomFamily(sessionId))
+  return useAtomValue(sessionAtomFamily(sessionId)) as Session | null
 }
 
 /**

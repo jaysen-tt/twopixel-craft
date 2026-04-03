@@ -34,9 +34,9 @@ export function useBackgroundTasks({ sessionId }: UseBackgroundTasksOptions): Us
   const [tasks, setTasks] = useAtom(backgroundTasksAtomFamily(sessionId))
 
   const addTask = useCallback((task: Omit<BackgroundTask, 'elapsedSeconds'>) => {
-    setTasks(prev => {
+    setTasks((prev: BackgroundTask[]) => {
       // Check if task already exists (prevent duplicates)
-      if (prev.some(t => t.toolUseId === task.toolUseId)) {
+      if (prev.some((t: BackgroundTask) => t.toolUseId === task.toolUseId)) {
         return prev
       }
       // Add new task with 0 elapsed seconds
@@ -45,7 +45,7 @@ export function useBackgroundTasks({ sessionId }: UseBackgroundTasksOptions): Us
   }, [setTasks])
 
   const updateTaskProgress = useCallback((toolUseId: string, elapsedSeconds: number) => {
-    setTasks(prev => prev.map(t =>
+    setTasks((prev: BackgroundTask[]) => prev.map((t: BackgroundTask) =>
       t.toolUseId === toolUseId
         ? { ...t, elapsedSeconds }
         : t
@@ -53,12 +53,12 @@ export function useBackgroundTasks({ sessionId }: UseBackgroundTasksOptions): Us
   }, [setTasks])
 
   const removeTask = useCallback((toolUseId: string) => {
-    setTasks(prev => prev.filter(t => t.toolUseId !== toolUseId))
+    setTasks((prev: BackgroundTask[]) => prev.filter((t: BackgroundTask) => t.toolUseId !== toolUseId))
   }, [setTasks])
 
   const killTask = useCallback(async (taskId: string, type: 'agent' | 'shell') => {
     // Find the task to get its toolUseId
-    const task = tasks.find(t => t.id === taskId)
+    const task = (tasks as BackgroundTask[]).find((t: BackgroundTask) => t.id === taskId)
 
     if (type === 'shell') {
       // Use KillShell IPC for shells
@@ -75,12 +75,12 @@ export function useBackgroundTasks({ sessionId }: UseBackgroundTasksOptions): Us
 
     // Always remove from UI after kill attempt
     if (task) {
-      setTasks(prev => prev.filter(t => t.id !== taskId))
+      setTasks((prev: BackgroundTask[]) => prev.filter((t: BackgroundTask) => t.id !== taskId))
     }
   }, [sessionId, tasks, setTasks])
 
   return {
-    tasks,
+    tasks: tasks as BackgroundTask[],
     addTask,
     updateTaskProgress,
     removeTask,

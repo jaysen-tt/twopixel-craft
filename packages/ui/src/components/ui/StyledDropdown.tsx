@@ -48,8 +48,8 @@ export function mirrorHoverToOpenStateClasses(className?: string): string | unde
 }
 
 // Re-export raw primitives that need no styling
-const DropdownMenu = DropdownMenuPrimitive.Root
-const DropdownMenuSub = DropdownMenuPrimitive.Sub
+const DropdownMenu = DropdownMenuPrimitive.Root as React.FC<DropdownMenuPrimitive.DropdownMenuProps>
+const DropdownMenuSub = DropdownMenuPrimitive.Sub as React.FC<DropdownMenuPrimitive.DropdownMenuSubProps>
 
 interface DropdownMenuTriggerProps extends React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger> {
   /** Auto-mirror hover:* classes to data-[state=open]:* while menu is open. Default: true */
@@ -172,7 +172,7 @@ export const StyledDropdownMenuSeparator = React.forwardRef<
     className={cn('bg-foreground/10 -mx-1 my-1 h-px', className)}
     {...props}
   />
-))
+)) as React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator> & React.RefAttributes<React.ComponentRef<typeof DropdownMenuPrimitive.Separator>>>
 StyledDropdownMenuSeparator.displayName = 'StyledDropdownMenuSeparator'
 
 // ── Sub-menu trigger ─────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ export const StyledDropdownMenuSubTrigger = React.forwardRef<
     {children}
     <ChevronRightIcon className="ml-auto size-4" />
   </DropdownMenuPrimitive.SubTrigger>
-))
+)) as React.ForwardRefExoticComponent<React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & React.RefAttributes<React.ComponentRef<typeof DropdownMenuPrimitive.SubTrigger>>>
 StyledDropdownMenuSubTrigger.displayName = 'StyledDropdownMenuSubTrigger'
 
 // ── Sub-menu content ─────────────────────────────────────────────────────────

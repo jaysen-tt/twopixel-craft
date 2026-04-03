@@ -1585,10 +1585,8 @@ export class SessionManager implements ISessionManager {
             } as any);
             
             managed.messageQueue.push({
-              type: 'prompt',
-              id: messageId,
-              message: prompt,
-              systemPrompt: '', // uses existing
+              messageId: messageId,
+              message: prompt
             });
             
             managed.sessionStatus = 'processing';
@@ -3672,7 +3670,7 @@ export class SessionManager implements ISessionManager {
         sessionLog.info(`[Memory] Starting background memory extraction for session ${sessionId}...`);
         extractAndStoreMemory(
           sessionId,
-          managed.messages,
+          managed.messages as any,
           managed.agent.runMiniCompletion.bind(managed.agent)
         ).catch(e => {
           sessionLog.warn(`[Memory] Background extraction failed: ${e}`);

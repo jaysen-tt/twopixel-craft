@@ -1,11 +1,10 @@
+#!/usr/bin/env bun
 /**
  * Note: This file has been modified by TwoPixel Team (2026).
  * (Not the official Craft version / 非 Craft 官方原版)
  * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
  * Licensed under the Apache License, Version 2.0.
  */
-
-#!/usr/bin/env bun
 /**
  * Debug script to print the full Craft Agent system prompt with annotations.
  * Shows both the static system prompt and dynamic user message context components.
