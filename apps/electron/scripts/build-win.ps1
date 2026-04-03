@@ -296,8 +296,9 @@ if (Test-Path $BunExe) {
         Write-Host "Zone.Identifier: None (file is unblocked)"
     }
 
-    # Check file hash
-    $hash = (Get-FileHash $BunExe -Algorithm SHA256).Hash
+    # Check file hash using certutil
+    $CertUtilOutput = (certutil -hashfile $BunExe SHA256)
+    $hash = $CertUtilOutput[1] -replace " ",""
     Write-Host "SHA256: $hash"
 } else {
     Write-Host "ERROR: bun.exe not found at $BunExe" -ForegroundColor Red
