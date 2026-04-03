@@ -200,7 +200,10 @@ $MainArgs = @(
     "--platform=node",
     "--format=cjs",
     "--outfile=apps/electron/dist/main.cjs",
-    "--external:electron"
+    "--external:electron",
+    "--external:electron-log",
+    "--external:electron-updater",
+    "--external:electron-log/main"
 )
 # Add OAuth defines if env vars are set
 if ($env:GOOGLE_OAUTH_CLIENT_ID) {
