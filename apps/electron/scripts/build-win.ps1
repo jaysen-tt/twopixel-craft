@@ -118,10 +118,17 @@ try {
     Invoke-WebRequest -Uri $ZipUrl -OutFile "$TempDir\$BunDownload.zip"
     Invoke-WebRequest -Uri $ChecksumUrl -OutFile "$TempDir\SHASUMS256.txt"
 
-    # Verify checksum
+    # Verify checksum using certutil (more reliable across Windows environments than Get-FileHash)
     Write-Host "Verifying checksum..."
     $ExpectedHash = (Get-Content "$TempDir\SHASUMS256.txt" | Select-String "$BunDownload.zip").ToString().Split(" ")[0]
-    $ActualHash = (Get-FileHash "$TempDir\$BunDownload.zip" -Algorithm SHA256).Hash.ToLower()
+    
+    # certutil output format: 
+    # SHA256 hash of file.zip:
+    # 0123456789abcdef...
+    # CertUtil: -hashfile command completed successfully.
+    $CertUtilOutput = (certutil -hashfile "$TempDir\$BunDownload.zip" SHA256)
+    $ActualHash = $CertUtilOutput[1] -replace " ",""
+    $ActualHash = $ActualHash.ToLower()
 
     if ($ActualHash -ne $ExpectedHash) {
         throw "Checksum verification failed! Expected: $ExpectedHash, Got: $ActualHash"
