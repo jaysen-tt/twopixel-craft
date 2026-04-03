@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Session MCP Server
  *
  * This MCP server provides session-scoped tools to Codex via stdio transport.
@@ -17,7 +24,7 @@
  *
  * Arguments:
  *   --session-id: Unique session identifier
- *   --workspace-root: Path to workspace folder (~/.craft-agent/workspaces/{id})
+ *   --workspace-root: Path to workspace folder (~/.twopixel/workspaces/{id})
  *   --plans-folder: Path to session's plans folder
  */
 
@@ -217,8 +224,8 @@ function createCodexContext(config: SessionConfig): SessionToolContext {
     // Preferences: write directly to preferences.json
     updatePreferences: (updates: Record<string, unknown>) => {
       // Resolve preferences path from config dir (parent of workspaces dir)
-      // workspaceRootPath = ~/.craft-agent/workspaces/{id}
-      // preferencesPath = ~/.craft-agent/preferences.json
+      // workspaceRootPath = ~/.twopixel/workspaces/{id}
+      // preferencesPath = ~/.twopixel/preferences.json
       const configDir = join(workspaceRootPath, '..', '..');
       const prefsPath = join(configDir, 'preferences.json');
       try {
@@ -242,7 +249,7 @@ function createCodexContext(config: SessionConfig): SessionToolContext {
 
     // Developer feedback: write one JSON file per entry to {configDir}/feedback/
     submitFeedback: (feedback) => {
-      const configDir = process.env.CRAFT_CONFIG_DIR || join(workspaceRootPath, '..', '..');
+      const configDir = process.env.TWOPIXEL_CONFIG_DIR || join(workspaceRootPath, '..', '..');
       const feedbackDir = join(configDir, 'feedback');
       mkdirSync(feedbackDir, { recursive: true });
       const filePath = join(feedbackDir, `${feedback.id}.json`);
@@ -272,7 +279,7 @@ function createSessionTools(includeDeveloperFeedback: boolean): Tool[] {
 // Craft Agents Docs Upstream Proxy
 // ============================================================
 
-const DOCS_MCP_URL = 'https://agents.craft.do/docs/mcp';
+const DOCS_MCP_URL = 'https://agents.2pixel.cn/docs/mcp';
 
 /** Cached upstream client + tool list */
 let docsClient: Client | null = null;

@@ -47,7 +47,7 @@ export function getDefaultStatusConfig(): WorkspaceStatusConfig {
     statuses: [
       {
         id: 'backlog',
-        label: 'Backlog',
+        label: '待办 (Backlog)',
         category: 'open',
         isFixed: false,
         isDefault: true,
@@ -55,7 +55,7 @@ export function getDefaultStatusConfig(): WorkspaceStatusConfig {
       },
       {
         id: 'todo',
-        label: 'Todo',
+        label: '计划中 (Todo)',
         category: 'open',
         isFixed: true,
         isDefault: false,
@@ -63,7 +63,7 @@ export function getDefaultStatusConfig(): WorkspaceStatusConfig {
       },
       {
         id: 'needs-review',
-        label: 'Needs Review',
+        label: '需要审核 (Needs Review)',
         category: 'open',
         isFixed: false,
         isDefault: true,
@@ -71,7 +71,7 @@ export function getDefaultStatusConfig(): WorkspaceStatusConfig {
       },
       {
         id: 'done',
-        label: 'Done',
+        label: '已完成 (Done)',
         category: 'closed',
         isFixed: true,
         isDefault: false,
@@ -79,7 +79,7 @@ export function getDefaultStatusConfig(): WorkspaceStatusConfig {
       },
       {
         id: 'cancelled',
-        label: 'Cancelled',
+        label: '已取消 (Cancelled)',
         category: 'closed',
         isFixed: true,
         isDefault: false,

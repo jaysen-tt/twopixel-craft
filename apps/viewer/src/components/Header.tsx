@@ -1,26 +1,29 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Header - App header with branding and controls
  */
 
 import { Sun, Moon, X } from 'lucide-react'
 
 /**
- * CraftAgentLogo - The Craft Agent "C" logo
+ * TwoPixelLogo - The TwoPixel logo
  */
 function CraftAgentLogo({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 24 24"
+      viewBox="0 0 1024 1024"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g transform="translate(3.4502, 3)" fill="currentColor">
-        <path
-          d="M3.17890888,3.6 L3.17890888,0 L16,0 L16,3.6 L3.17890888,3.6 Z M9.642,7.2 L9.64218223,10.8 L0,10.8 L0,3.6 L16,3.6 L16,7.2 L9.642,7.2 Z M3.17890888,18 L3.178,14.4 L0,14.4 L0,10.8 L16,10.8 L16,18 L3.17890888,18 Z"
-          fillRule="nonzero"
-        />
-      </g>
+      <rect width="1024" height="1024" rx="256" fill="currentColor"/>
+      <path d="M720 320H304V448H592V576H304V704H720V576H432V448H720V320Z" fill="white"/>
     </svg>
   )
 }
@@ -38,7 +41,7 @@ export function Header({ hasSession, sessionTitle, isDark, onToggleTheme, onClea
     <header className="shrink-0 grid grid-cols-[auto_1fr_auto] items-center px-4 py-3">
       {/* Logo - links to main site */}
       <a
-        href="https://agents.craft.do"
+        href="https://agents.2pixel.cn"
         className="hover:opacity-80 transition-opacity"
         title="Craft Agent"
       >

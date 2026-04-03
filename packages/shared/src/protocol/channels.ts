@@ -16,6 +16,7 @@ export const RPC_CHANNELS = {
     SHUTTING_DOWN: 'server:shuttingDown',
     STATUS_CHANGED: 'server:statusChanged',
     HOME_DIR: 'server:homeDir',
+    PING: 'server:ping',
   },
   sessions: {
     GET: 'sessions:get',
@@ -109,6 +110,7 @@ export const RPC_CHANNELS = {
     VERSIONS: 'system:versions',
     HOME_DIR: 'system:homeDir',
     IS_DEBUG_MODE: 'system:isDebugMode',
+    APP_ROOT_PATH: 'system:appRootPath',
   },
   update: {
     CHECK: 'update:check',
@@ -150,6 +152,7 @@ export const RPC_CHANNELS = {
   },
   auth: {
     LOGOUT: 'auth:logout',
+    RESET_APP: 'auth:resetApp',
     SHOW_LOGOUT_CONFIRMATION: 'auth:showLogoutConfirmation',
     SHOW_DELETE_SESSION_CONFIRMATION: 'auth:showDeleteSessionConfirmation',
   },

@@ -1,7 +1,14 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Release Notes Utilities
  *
- * Loads release notes from bundled assets and syncs them to ~/.craft-agent/release-notes/.
+ * Loads release notes from bundled assets and syncs them to ~/.twopixel/release-notes/.
  * Follows the same pattern as docs/index.ts.
  *
  * Source content lives in apps/electron/resources/release-notes/*.md.
@@ -9,11 +16,11 @@
 
 import { join } from 'path';
 import { homedir } from 'os';
-import { existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync, unlinkSync } from 'fs';
 import { getBundledAssetsDir } from '../utils/paths.ts';
 import { debug } from '../utils/debug.ts';
 
-const CONFIG_DIR = join(homedir(), '.craft-agent');
+const CONFIG_DIR = join(homedir(), '.twopixel');
 const RELEASE_NOTES_DIR = join(CONFIG_DIR, 'release-notes');
 
 let releaseNotesInitialized = false;
@@ -70,6 +77,21 @@ export function initializeReleaseNotes(): void {
 
   if (!existsSync(RELEASE_NOTES_DIR)) {
     mkdirSync(RELEASE_NOTES_DIR, { recursive: true });
+  } else {
+    // Clean up old release notes
+    try {
+      const existingFiles = readdirSync(RELEASE_NOTES_DIR);
+      for (const file of existingFiles) {
+        if (file.endsWith('.md')) {
+          const filePath = join(RELEASE_NOTES_DIR, file);
+          try {
+            unlinkSync(filePath);
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.warn('[release-notes] Failed to clean up old notes:', e);
+    }
   }
 
   const bundledNotes = getBundledReleaseNotes();

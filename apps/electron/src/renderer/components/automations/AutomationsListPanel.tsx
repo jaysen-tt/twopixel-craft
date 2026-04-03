@@ -11,6 +11,7 @@
 
 import * as React from 'react'
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Webhook } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@craft-agent/ui'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -178,6 +179,7 @@ export function AutomationsListPanel({
   workspaceRootPath,
   className,
 }: AutomationsListPanelProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchActive, setSearchActive] = useState(false)
 
@@ -242,8 +244,8 @@ export function AutomationsListPanel({
       <div className={cn('flex flex-col flex-1 min-h-0', className)}>
         <EntityListEmptyScreen
           icon={<Webhook />}
-          title="No automations configured"
-          description="Automations run actions when events occur — execute commands on schedules, react to label changes, or trigger prompts automatically."
+          title={t('automations.noAutomations')}
+          description={t('automations.automationsDesc')}
           docKey="automations"
         >
           {workspaceRootPath && (
@@ -251,7 +253,7 @@ export function AutomationsListPanel({
               align="center"
               trigger={
                 <button className="inline-flex items-center h-7 px-3 text-xs font-medium rounded-[8px] bg-background shadow-minimal hover:bg-foreground/[0.03] transition-colors">
-                  Add Automation
+                  {t('automations.addAutomation')}
                 </button>
               }
               {...getEditConfig('automation-config', workspaceRootPath)}

@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { useMemo } from 'react'
 import {
   resolveTheme,
@@ -10,7 +17,7 @@ import { useTheme as useThemeContext } from '@/context/ThemeContext'
 
 interface UseThemeOptions {
   /**
-   * App-level theme override (from ~/.craft-agent/theme.json)
+   * App-level theme override (from ~/.twopixel/theme.json)
    * When provided, merges with the preset theme from context.
    */
   appTheme?: ThemeOverrides | null

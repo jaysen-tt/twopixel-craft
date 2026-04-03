@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { describe, it, expect } from 'bun:test'
 import type { SessionHeader } from '../types'
 import { getHeaderMetadataSignature, mergeHeaderWithExternalMetadata } from '../persistence-queue'
@@ -5,7 +12,7 @@ import { getHeaderMetadataSignature, mergeHeaderWithExternalMetadata } from '../
 function makeHeader(overrides: Partial<SessionHeader> = {}): SessionHeader {
   return {
     id: 's1',
-    workspaceRootPath: '~/.craft-agent/workspaces/ws',
+    workspaceRootPath: '~/.twopixel/workspaces/ws',
     createdAt: 1,
     lastUsedAt: 2,
     messageCount: 0,

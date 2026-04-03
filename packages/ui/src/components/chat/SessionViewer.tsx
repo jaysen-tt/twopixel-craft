@@ -49,22 +49,18 @@ export interface SessionViewerProps {
 }
 
 /**
- * CraftAgentLogo - The Craft Agent "C" logo for branding
+ * TwoPixelLogo - The TwoPixel logo for branding
  */
 function CraftAgentLogo({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 24 24"
+      viewBox="0 0 1024 1024"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g transform="translate(3.4502, 3)" fill="currentColor">
-        <path
-          d="M3.17890888,3.6 L3.17890888,0 L16,0 L16,3.6 L3.17890888,3.6 Z M9.642,7.2 L9.64218223,10.8 L0,10.8 L0,3.6 L16,3.6 L16,7.2 L9.642,7.2 Z M3.17890888,18 L3.178,14.4 L0,14.4 L0,10.8 L16,10.8 L16,18 L3.17890888,18 Z"
-          fillRule="nonzero"
-        />
-      </g>
+      <rect width="1024" height="1024" rx="256" fill="currentColor"/>
+      <path d="M720 320H304V448H592V576H304V704H720V576H432V448H720V320Z" fill="white"/>
     </svg>
   )
 }

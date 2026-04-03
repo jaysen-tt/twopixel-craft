@@ -1,9 +1,16 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Documentation links and summaries for contextual help throughout the UI.
  * Summaries provide quick context; "Learn more" opens the full docs.
  */
 
-const DOC_BASE_URL = 'https://agents.craft.do/docs'
+const DOC_BASE_URL = 'https://agents.2pixel.cn/docs'
 
 export type DocFeature =
   | 'sources'
@@ -94,13 +101,13 @@ export const DOCS: Record<DocFeature, DocInfo> = {
     path: '/reference/config/config-file',
     title: 'App Settings',
     summary:
-      'Configure global app settings like your default model, authentication method, and workspace list. Settings are stored in ~/.craft-agent/config.json.',
+      'Configure global app settings like your default model, authentication method, and workspace list. Settings are stored in ~/.twopixel/config.json.',
   },
   preferences: {
     path: '/reference/config/preferences',
     title: 'Preferences',
     summary:
-      'Personal preferences like your name, timezone, and language that help the agent personalize responses. Stored in ~/.craft-agent/preferences.json.',
+      'Personal preferences like your name, timezone, and language that help the agent personalize responses. Stored in ~/.twopixel/preferences.json.',
   },
   automations: {
     path: '/automations/overview',

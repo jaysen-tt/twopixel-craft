@@ -1,0 +1,384 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+import { getApiClientConfig } from '@/config/api-client-config'
+
+export interface TwoPixelUser {
+  user_id: string | number
+  username: string
+  email?: string
+  balance?: number
+  is_admin?: boolean
+}
+
+export interface TwoPixelAuthResult {
+  success: boolean
+  token?: string
+  user?: TwoPixelUser
+  error?: string
+}
+
+export interface TwoPixelTokenPayload {
+  userId: string | number
+  username: string
+  email?: string
+  exp?: number
+}
+
+export interface TwoPixelAccountOverview {
+  user: TwoPixelUser | null
+  balance: number
+  todayTokens?: number
+  monthTokens?: number
+  quotaUsed?: number
+  quotaLimit?: number
+  todayCost?: number
+  monthCost?: number
+}
+
+const TOKEN_STORAGE_KEY = 'twopixel_token'
+const USER_STORAGE_KEY = 'twopixel_user'
+const BALANCE_STORAGE_KEY = 'twopixel_balance'
+const IS_ADMIN_STORAGE_KEY = 'twopixel_is_admin'
+
+function getBaseUrl(): string {
+  const config = getApiClientConfig()
+  return config.baseUrl || 'http://127.0.0.1:6185'
+}
+
+function parseNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
+function pickNumber(...values: unknown[]): number | undefined {
+  for (const value of values) {
+    const parsed = parseNumber(value)
+    if (parsed !== undefined) return parsed
+  }
+  return undefined
+}
+
+function setStoredUser(user: TwoPixelUser): void {
+  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+  localStorage.setItem(BALANCE_STORAGE_KEY, String(user.balance || 0))
+  localStorage.setItem(IS_ADMIN_STORAGE_KEY, String(user.is_admin ? 1 : 0))
+}
+
+export async function fetchAuthorizedJson(endpoint: string): Promise<any> {
+  const token = getToken()
+  if (!token) {
+    throw new Error('Not authenticated')
+  }
+
+  // Use the LLM Proxy port for API endpoints as Nginx /api/ routes to the old HTTP backend
+  let url = endpoint
+  if (url.startsWith('/api/')) {
+    url = `http://43.160.252.207:16686${url}`
+  } else if (!url.startsWith('http')) {
+    url = `http://43.160.252.207:16686${url.startsWith('/') ? '' : '/'}${url}`
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      logout()
+    }
+    throw new Error(`Failed to fetch ${endpoint}`)
+  }
+
+  return response.json()
+}
+
+export async function login(username: string, password: string): Promise<TwoPixelAuthResult> {
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    })
+
+    const data = await response.json()
+
+    if (data.success && data.token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, data.token)
+      const user: TwoPixelUser = {
+        user_id: data.user_id || username,
+        username: data.username || username,
+        email: data.email,
+        balance: data.balance || 0,
+        is_admin: data.is_admin || false,
+      }
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+      localStorage.setItem(BALANCE_STORAGE_KEY, String(user.balance || 0))
+      localStorage.setItem(IS_ADMIN_STORAGE_KEY, String(user.is_admin ? 1 : 0))
+      
+      return {
+        success: true,
+        token: data.token,
+        user,
+      }
+    }
+
+    return {
+      success: false,
+      error: data.error || '登录失败',
+    }
+  } catch (error) {
+    console.error('[TwoPixelAuth] Login error:', error)
+    return {
+      success: false,
+      error: '网络错误，请检查网络连接',
+    }
+  }
+}
+
+export async function sendVerificationCode(email: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/auth/send-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await response.json()
+    if (data.success) {
+      return { success: true }
+    }
+    return { success: false, error: data.error || 'Failed to send verification code' }
+  } catch (error) {
+    console.error('[TwoPixelAuth] Send code error:', error)
+    return { success: false, error: 'Network error, please check your connection' }
+  }
+}
+
+export async function register(
+  username: string,
+  password: string,
+  email: string,
+  code: string,
+): Promise<TwoPixelAuthResult> {
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password, email, code }),
+    })
+
+    const data = await response.json()
+
+    if (data.success && data.token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, data.token)
+      const user: TwoPixelUser = {
+        user_id: data.user_id || username,
+        username: data.username || username,
+        email: data.email || email,
+        balance: data.balance || 10,
+        is_admin: data.is_admin || false,
+      }
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+      localStorage.setItem(BALANCE_STORAGE_KEY, String(user.balance || 10))
+      localStorage.setItem(IS_ADMIN_STORAGE_KEY, String(user.is_admin ? 1 : 0))
+      
+      return {
+        success: true,
+        token: data.token,
+        user,
+      }
+    }
+
+    return {
+      success: false,
+      error: data.error || '注册失败',
+    }
+  } catch (error) {
+    console.error('[TwoPixelAuth] Register error:', error)
+    return {
+      success: false,
+      error: '网络错误，请检查网络连接',
+    }
+  }
+}
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_STORAGE_KEY)
+}
+
+export function getUser(): TwoPixelUser | null {
+  const userStr = localStorage.getItem(USER_STORAGE_KEY)
+  if (!userStr) return null
+
+  try {
+    return JSON.parse(userStr)
+  } catch {
+    return null
+  }
+}
+
+export function getBalance(): number {
+  return parseFloat(localStorage.getItem(BALANCE_STORAGE_KEY) || '0')
+}
+
+export function isAdmin(): boolean {
+  return localStorage.getItem(IS_ADMIN_STORAGE_KEY) === '1'
+}
+
+export function isAuthenticated(): boolean {
+  const token = getToken()
+  if (!token) return false
+
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+
+    const payload = JSON.parse(atob(parts[1])) as TwoPixelTokenPayload
+    if (payload.exp && payload.exp < Date.now() / 1000) {
+      logout()
+      return false
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function logout(): void {
+  localStorage.removeItem(TOKEN_STORAGE_KEY)
+  localStorage.removeItem(USER_STORAGE_KEY)
+  localStorage.removeItem(BALANCE_STORAGE_KEY)
+  localStorage.removeItem(IS_ADMIN_STORAGE_KEY)
+}
+
+export async function validateToken(): Promise<boolean> {
+  const token = getToken()
+  if (!token) return false
+
+  try {
+    const response = await fetch(`${getBaseUrl()}/api/auth/validate`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      logout()
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('[TwoPixelAuth] Token validation error:', error)
+    return true
+  }
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const token = getToken()
+  if (!token) return {}
+
+  return {
+    Authorization: `Bearer ${token}`,
+  }
+}
+
+export async function fetchAccountOverview(): Promise<TwoPixelAccountOverview> {
+  const storedUser = getUser()
+  const storedBalance = getBalance()
+
+  let profileResponse = null
+  let usageResponse = null
+
+  try {
+    const results = await Promise.allSettled([
+      fetchAuthorizedJson('/api/user/profile'),
+      fetchAuthorizedJson('/api/user/usage'),
+    ])
+
+    if (results[0].status === 'fulfilled') {
+      profileResponse = results[0].value
+    } else {
+      console.warn('[TwoPixelAuth] Profile fetch failed:', results[0].reason)
+    }
+
+    if (results[1].status === 'fulfilled') {
+      usageResponse = results[1].value
+    } else {
+      console.warn('[TwoPixelAuth] Usage fetch failed:', results[1].reason)
+    }
+  } catch (error) {
+    console.error('[TwoPixelAuth] Error fetching account overview:', error)
+  }
+
+  const balance = pickNumber(
+    profileResponse?.available_balance,
+    profileResponse?.balance,
+    storedUser?.balance,
+    storedBalance,
+  ) ?? 0
+
+  const quotaLimit = 10.0 // Currently hardcoded or maybe we can fetch if API supports
+  const quotaUsed = 0
+
+  const todayCost = pickNumber(
+    usageResponse?.today?.total_cost,
+    profileResponse?.usage_today?.total_cost,
+  )
+
+  const monthCost = pickNumber(
+    usageResponse?.month?.total_cost,
+    profileResponse?.usage_month?.total_cost,
+  )
+
+  const todayTokens = pickNumber(
+    usageResponse?.today?.input_tokens,
+  ) ? (usageResponse?.today?.input_tokens + usageResponse?.today?.output_tokens) : undefined
+
+  const monthTokens = pickNumber(
+    usageResponse?.month?.input_tokens,
+  ) ? (usageResponse?.month?.input_tokens + usageResponse?.month?.output_tokens) : undefined
+
+  const user = storedUser
+    ? {
+        ...storedUser,
+        balance,
+      }
+    : null
+
+  if (user) {
+    setStoredUser(user)
+  } else {
+    localStorage.setItem(BALANCE_STORAGE_KEY, String(balance))
+  }
+
+  return {
+    user,
+    balance,
+    todayTokens,
+    monthTokens,
+    quotaUsed,
+    quotaLimit,
+    todayCost,
+    monthCost,
+  }
+}

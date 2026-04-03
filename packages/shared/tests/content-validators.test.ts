@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Tests for content-based config validators used by PreToolUse hook.
  * These validators check file content in memory before it reaches disk.
  */
@@ -352,7 +359,7 @@ describe('validatePermissionsContent', () => {
 // ============================================================
 
 describe('detectConfigFileType', () => {
-  const workspaceRoot = '/Users/test/.craft-agent/workspaces/ws-123';
+  const workspaceRoot = '/Users/test/.twopixel/workspaces/ws-123';
 
   it('detects source config files', () => {
     const result = detectConfigFileType(

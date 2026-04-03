@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Template Loader
  *
  * Discovers and loads HTML templates from source directories.
@@ -94,7 +101,7 @@ export function parseTemplateHeader(content: string): TemplateMeta | null {
 /**
  * Load a specific template from a source's templates directory.
  *
- * @param sourcePath - Absolute path to the source directory (e.g., ~/.craft-agent/workspaces/ws/sources/linear)
+ * @param sourcePath - Absolute path to the source directory (e.g., ~/.twopixel/workspaces/ws/sources/linear)
  * @param templateId - The template identifier (e.g., "issue-detail")
  * @returns The loaded template, or null if not found
  */

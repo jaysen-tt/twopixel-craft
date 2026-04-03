@@ -1,11 +1,18 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Workspace Types
  *
  * Workspaces are the top-level organizational unit. Everything (sources, sessions)
  * is scoped to a workspace.
  *
  * Directory structure:
- * ~/.craft-agent/workspaces/{slug}/
+ * ~/.twopixel/workspaces/{slug}/
  *   ├── config.json      - Workspace settings
  *   ├── sources/         - Data sources (MCP, API, local)
  *   └── sessions/        - Conversation sessions

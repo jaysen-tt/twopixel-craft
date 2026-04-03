@@ -1,0 +1,33 @@
+name: Build Windows App
+
+on:
+  # 允许在 GitHub Actions 页面手动点击运行
+  workflow_dispatch: 
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: 检出代码 (Checkout)
+        uses: actions/checkout@v4
+
+      - name: 配置 Bun 环境 (Setup Bun)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.9"
+
+      - name: 安装项目依赖 (Install Dependencies)
+        run: bun install
+
+      - name: 执行 Windows 打包脚本 (Build Windows App)
+        run: |
+          cd apps/electron
+          bun run dist:win
+        
+      - name: 上传安装包到 GitHub (Upload Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: TwoPixel-Windows-exe
+          path: apps/electron/release/*.exe
+          retention-days: 7

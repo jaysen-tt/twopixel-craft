@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MoreHorizontal, AppWindow } from 'lucide-react'
 import {
   DropdownMenu,
@@ -29,25 +30,18 @@ export const meta: DetailsPageMeta = {
 }
 
 interface SettingsNavigatorProps {
-  /** Currently selected settings subpage */
   selectedSubpage: SettingsSubpage
-  /** Called when a subpage is selected */
   onSelectSubpage: (subpage: SettingsSubpage) => void
 }
 
 interface SettingsItem {
   id: SettingsSubpage
-  label: string
   icon: React.ComponentType<{ className?: string }>
-  description: string
 }
 
-// Derive settings items from shared schema, using shared custom SVG icons
 const settingsItems: SettingsItem[] = SETTINGS_ITEMS.map((item) => ({
   id: item.id,
-  label: item.label,
   icon: SETTINGS_ICONS[item.id],
-  description: item.description,
 }))
 
 interface SettingsItemRowProps {
@@ -57,30 +51,23 @@ interface SettingsItemRowProps {
   onSelect: () => void
 }
 
-/**
- * SettingsItemRow - Individual settings item with dropdown menu
- * Tracks menu open state to keep "..." button visible when menu is open
- */
 function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRowProps) {
+  const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const Icon = item.icon
 
-  // Open settings page in a new window via deep link
   const handleOpenInNewWindow = () => {
     window.electronAPI.openUrl(`craftagents://settings/${item.id}?window=focused`)
   }
 
   return (
     <div className="settings-item" data-selected={isSelected || undefined}>
-      {/* Separator - only show if not first */}
       {!isFirst && (
         <div className="settings-separator pl-12 pr-4">
           <Separator />
         </div>
       )}
-      {/* Wrapper for button with proper margins */}
       <div className="settings-content relative group select-none pl-2 mr-2">
-        {/* Icon - positioned absolutely for consistent alignment */}
         <div className="absolute left-[20px] top-[14px] z-10">
           <Icon
             className={cn(
@@ -89,22 +76,18 @@ function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRo
             )}
           />
         </div>
-        {/* Main content button */}
         <button
           type="button"
           onClick={onSelect}
           className={cn(
             'flex w-full items-start gap-2 pl-2 pr-4 py-3 text-left text-sm outline-none rounded-[8px]',
-            // Fast hover transition (75ms vs default 150ms)
             'transition-[background-color] duration-75',
             isSelected
               ? 'bg-foreground/5 hover:bg-foreground/7'
               : 'hover:bg-foreground/2'
           )}
         >
-          {/* Spacer for icon */}
           <div className="w-6 h-5 shrink-0" />
-          {/* Content column */}
           <div className="flex flex-col min-w-0 flex-1">
             <span
               className={cn(
@@ -112,14 +95,13 @@ function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRo
                 isSelected ? 'text-foreground' : 'text-foreground/80'
               )}
             >
-              {item.label}
+              {t(`settings.${item.id}`)}
             </span>
             <span className="text-xs text-foreground/60 line-clamp-1">
-              {item.description}
+              {t(`settings.${item.id}Desc`)}
             </span>
           </div>
         </button>
-        {/* Action buttons - visible on hover or when menu is open */}
         <div
           className={cn(
             'absolute right-2 top-2 transition-opacity z-10',
@@ -137,7 +119,7 @@ function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRo
                 <DropdownMenuProvider>
                   <StyledDropdownMenuItem onClick={handleOpenInNewWindow}>
                     <AppWindow className="h-3.5 w-3.5" />
-                    <span className="flex-1">Open in New Window</span>
+                    <span className="flex-1">{t('menu.openInNewWindow')}</span>
                   </StyledDropdownMenuItem>
                 </DropdownMenuProvider>
               </StyledDropdownMenuContent>

@@ -198,6 +198,18 @@ export function getModelById(modelId: string): ModelDefinition | undefined {
 export function getModelDisplayName(modelId: string): string {
   const model = getModelById(modelId);
   if (model) return model.name;
+
+  const id = modelId.startsWith('pi/') ? modelId.slice(3) : modelId;
+
+  if (id === 'gemini-proxy') return 'Gemini-3.1-Pro-Preview';
+  if (id === 'glm-proxy') return 'GLM-5';
+  if (id === 'glm-5-turbo-proxy') return 'GLM-5-Turbo';
+  if (id === 'glm-5.1-proxy') return 'GLM-5.1';
+  if (id === 'qwen-proxy') return 'Qwen Max';
+  if (id === 'kimi-proxy') return 'Kimi 2.5';
+  if (id === 'deepseek-proxy') return 'DeepSeek R1';
+  if (id === 'deepseek-coder-proxy') return 'DeepSeek Coder';
+
   // Fallback: normalize Bedrock-native IDs, then strip prefix and date suffix
   // e.g., "claude-opus-4-5-20251101" → "Opus 4.5"
   const normalized = bedrockToBarId(modelId);
@@ -219,6 +231,17 @@ export function getModelDisplayName(modelId: string): string {
 export function getModelShortName(modelId: string): string {
   const model = getModelById(modelId);
   if (model) return model.shortName;
+
+  const id = modelId.startsWith('pi/') ? modelId.slice(3) : modelId;
+  if (id === 'gemini-proxy') return 'Gemini-3.1-Pro-Preview';
+  if (id === 'glm-proxy') return 'GLM-5';
+  if (id === 'glm-5-turbo-proxy') return 'GLM-5-Turbo';
+  if (id === 'glm-5.1-proxy') return 'GLM-5.1';
+  if (id === 'qwen-proxy') return 'Qwen Max';
+  if (id === 'kimi-proxy') return 'Kimi 2.5';
+  if (id === 'deepseek-proxy') return 'DeepSeek R1';
+  if (id === 'deepseek-coder-proxy') return 'DeepSeek Coder';
+
   // For provider-prefixed IDs (e.g. "openai/gpt-5"), show just the model part
   if (modelId.includes('/')) {
     return modelId.split('/').pop() || modelId;

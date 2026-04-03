@@ -197,7 +197,7 @@ export function SlashCommandMenu({
   activeCommands = [],
   onSelect,
   showFilter = false,
-  filterPlaceholder = 'Search commands...',
+  filterPlaceholder = '搜索命令 (Search commands)...',
   className,
 }: SlashCommandMenuProps) {
   const [filter, setFilter] = React.useState('')

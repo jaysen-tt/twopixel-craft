@@ -1,53 +1,37 @@
-/**
- * EmptyStateHint - Rotating workflow suggestions for empty chat state
- *
- * Displays inspirational hints showing what users can do with the agent.
- * Each hint contains inline entity badges (sources, files, folders, skills)
- * with generic Lucide icons.
- *
- * Entity token format in hints:
- * - {source:Gmail} → Globe icon + "Gmail" label
- * - {file:screenshot} → Paperclip icon + "screenshot" label
- * - {folder} → Folder icon + "folder" label
- * - {skill} → Zap icon + "skill" label
- */
-
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/** Entity types that can appear in hints */
 type EntityType = 'source' | 'file' | 'folder' | 'skill'
 
-/** Parsed segment of a hint - either text or an entity */
 type HintSegment =
   | { type: 'text'; content: string }
   | { type: 'entity'; entityType: EntityType; label: string; provider?: string }
 
-/** A complete hint with its segments */
 interface ParsedHint {
   id: string
   segments: HintSegment[]
 }
 
-// ============================================================================
-// Hint Templates
-// ============================================================================
+const HINT_TEMPLATES_ZH = [
+  '总结您的 {source:Gmail} 收件箱，起草回复，并保存笔记到 {source:Craft}',
+  '将 {file:截图} 转换为您 {folder} 中的工作网站',
+  '从 {source:Linear} 拉取问题，在 {source:Slack} 中研究，发布修复',
+  '转录 {file:语音备忘录} 并转换为 {source:Notion} 任务',
+  '分析 {file:电子表格} 并将洞察发布到 {source:Slack}',
+  '审查 {source:GitHub} PR，然后在 {source:Craft} 中总结更改',
+  '解析 {file:发票PDF} 并记录到 {source:Google Sheets}',
+  '使用 {source:Exa} 研究，撰写报告，保存到您的 {source:Obsidian} 库',
+  '重构您 {folder} 中的代码，然后推送到 {source:GitHub}',
+  '将 {source:日历} 事件与 {source:Linear} 项目截止日期同步',
+  '将会议 {file:笔记} 自动转换为 {source:Jira} 工单',
+  '查询您的 {source:数据库} 并在新 {file:文档} 中可视化结果',
+  '获取 {source:Figma} 设计并在您的 {folder} 中生成 React 组件',
+  '将 {source:Slack} 话题合并为 {source:Notion} 的每周摘要',
+  '运行 {skill} 分析您的代码库并修复您 {folder} 中的问题',
+]
 
-/**
- * Hint templates with entity placeholders.
- * Format: {type:label} or {type} for default label
- *
- * Supported tokens:
- * - {source:name} - Source with specific provider (gmail, slack, github, etc.)
- * - {file:label} - File attachment with custom label
- * - {folder} - Working directory
- * - {skill} - Custom skill
- */
-const HINT_TEMPLATES = [
+const HINT_TEMPLATES_EN = [
   'Summarize your {source:Gmail} inbox, draft replies, and save notes to {source:Craft}',
   'Turn a {file:screenshot} into a working website in your {folder}',
   'Pull issues from {source:Linear}, research in {source:Slack}, ship the fix',
@@ -124,16 +108,9 @@ function parseHintTemplate(template: string, id: string): ParsedHint {
   return { id, segments }
 }
 
-/**
- * Parse all hint templates
- */
-function parseAllHints(): ParsedHint[] {
-  return HINT_TEMPLATES.map((template, index) => parseHintTemplate(template, `hint-${index}`))
+function parseAllHints(templates: string[]): ParsedHint[] {
+  return templates.map((template, index) => parseHintTemplate(template, `hint-${index}`))
 }
-
-// ============================================================================
-// Entity Badge Component
-// ============================================================================
 
 interface EntityBadgeProps {
   entityType: EntityType
@@ -141,9 +118,6 @@ interface EntityBadgeProps {
   provider?: string
 }
 
-/**
- * EntityBadge - Inline label for hint entities with subtle badge styling
- */
 function EntityBadge({ label }: EntityBadgeProps) {
   return (
     <span className="inline-flex pl-[8px] pr-[10px] py-0.5 mx-[2px] rounded-[8px] bg-foreground/5 shadow-minimal text-foreground/40">
@@ -152,28 +126,16 @@ function EntityBadge({ label }: EntityBadgeProps) {
   )
 }
 
-// ============================================================================
-// Main Component
-// ============================================================================
-
 export interface EmptyStateHintProps {
-  /** Specific hint index to display (for playground testing) */
   hintIndex?: number
-  /** Custom class name */
   className?: string
 }
 
-/**
- * EmptyStateHint - Displays a random workflow suggestion
- *
- * Shows what users can accomplish with the agent by displaying
- * example workflows with inline entity badges.
- */
 export function EmptyStateHint({ hintIndex, className }: EmptyStateHintProps) {
-  // Parse all hints once
-  const allHints = React.useMemo(() => parseAllHints(), [])
+  const { i18n } = useTranslation()
+  const templates = i18n.language === 'zh-CN' ? HINT_TEMPLATES_ZH : HINT_TEMPLATES_EN
+  const allHints = React.useMemo(() => parseAllHints(templates), [templates])
 
-  // Select a hint - either specified index or random on mount
   const [selectedIndex] = React.useState(() => {
     if (hintIndex !== undefined && hintIndex >= 0 && hintIndex < allHints.length) {
       return hintIndex
@@ -181,7 +143,6 @@ export function EmptyStateHint({ hintIndex, className }: EmptyStateHintProps) {
     return Math.floor(Math.random() * allHints.length)
   })
 
-  // Update if hintIndex prop changes
   const displayIndex = hintIndex !== undefined ? hintIndex : selectedIndex
   const hint = allHints[displayIndex % allHints.length]
 
@@ -212,16 +173,12 @@ export function EmptyStateHint({ hintIndex, className }: EmptyStateHintProps) {
   )
 }
 
-/**
- * Get the total number of available hints (for playground variant generation)
- */
-export function getHintCount(): number {
-  return HINT_TEMPLATES.length
+export function getHintCount(i18n: { language: string }): number {
+  const templates = i18n.language === 'zh-CN' ? HINT_TEMPLATES_ZH : HINT_TEMPLATES_EN
+  return templates.length
 }
 
-/**
- * Get hint template by index (for debugging/testing)
- */
-export function getHintTemplate(index: number): string {
-  return HINT_TEMPLATES[index % HINT_TEMPLATES.length]
+export function getHintTemplate(index: number, i18n: { language: string }): string {
+  const templates = i18n.language === 'zh-CN' ? HINT_TEMPLATES_ZH : HINT_TEMPLATES_EN
+  return templates[index % templates.length]
 }

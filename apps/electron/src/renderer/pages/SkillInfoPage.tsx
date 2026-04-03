@@ -1,13 +1,6 @@
-/**
- * SkillInfoPage
- *
- * Displays comprehensive skill details including metadata,
- * permission modes, and instructions.
- * Uses the Info_ component system for consistent styling with SourceInfoPage.
- */
-
 import * as React from 'react'
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, X, Minus } from 'lucide-react'
 import { EditPopover, EditButton, getEditConfig } from '@/components/ui/EditPopover'
 import { toast } from 'sonner'
@@ -30,13 +23,13 @@ interface SkillInfoPageProps {
 }
 
 export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory }: SkillInfoPageProps) {
+  const { t } = useTranslation()
   const [skill, setSkill] = useState<LoadedSkill | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const activeWorkspace = useActiveWorkspace()
   const canRevealLocally = !activeWorkspace?.remoteServer
 
-  // Load skill data
   useEffect(() => {
     let isMounted = true
     setLoading(true)
@@ -48,7 +41,6 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
 
         if (!isMounted) return
 
-        // Find the skill by slug
         const found = skills.find((s) => s.slug === skillSlug)
         if (found) {
           setSkill(found)
@@ -158,18 +150,15 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
 
       {skill && (
         <Info_Page.Content>
-          {/* Hero: Avatar, title, and description */}
           <Info_Page.Hero
             avatar={<SkillAvatar skill={skill} fluid workspaceId={workspaceId} />}
             title={skill.metadata.name}
             tagline={skill.metadata.description}
           />
 
-          {/* Metadata */}
           <Info_Section
-            title="Metadata"
+            title={t('infoPage.metadata')}
             actions={
-              // EditPopover for AI-assisted metadata editing (name, description in frontmatter)
               <EditPopover
                 trigger={<EditButton />}
                 {...getEditConfig('skill-metadata', skill.path)}
@@ -181,17 +170,17 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
             }
           >
             <Info_Table>
-              <Info_Table.Row label="Slug" value={skill.slug} />
-              <Info_Table.Row label="Name">{skill.metadata.name}</Info_Table.Row>
-              <Info_Table.Row label="Description">
+              <Info_Table.Row label={t('infoPage.slug')} value={skill.slug} />
+              <Info_Table.Row label={t('infoPage.name')}>{skill.metadata.name}</Info_Table.Row>
+              <Info_Table.Row label={t('infoPage.description')}>
                 {skill.metadata.description}
               </Info_Table.Row>
-              <Info_Table.Row label="Source">
+              <Info_Table.Row label={t('infoPage.source')}>
                 {skill.source === 'project' ? 'Project (.agents/skills/)' :
                  skill.source === 'global' ? 'Global (~/.agents/skills/)' :
                  'Workspace'}
               </Info_Table.Row>
-              <Info_Table.Row label="Location">
+              <Info_Table.Row label={t('infoPage.location')}>
                 <button
                   onClick={handleLocationClick}
                   className="hover:underline cursor-pointer text-left"
@@ -200,19 +189,18 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
                 </button>
               </Info_Table.Row>
               {skill.metadata.requiredSources && skill.metadata.requiredSources.length > 0 && (
-                <Info_Table.Row label="Required Sources">
+                <Info_Table.Row label={t('infoPage.requiredSources')}>
                   {skill.metadata.requiredSources.join(', ')}
                 </Info_Table.Row>
               )}
             </Info_Table>
           </Info_Section>
 
-          {/* Permission Modes */}
           {skill.metadata.alwaysAllow && skill.metadata.alwaysAllow.length > 0 && (
-            <Info_Section title="Permission Modes">
+            <Info_Section title={t('infoPage.permissionModes')}>
               <div className="space-y-2 px-4 py-3">
                 <p className="text-xs text-muted-foreground mb-3">
-                  How "Always Allowed Tools" interacts with permission modes:
+                  {t('infoPage.permissionModesDesc')}
                 </p>
                 <div className="rounded-[8px] border border-border/50 overflow-hidden">
                   <table className="w-full text-sm">
@@ -245,11 +233,9 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
             </Info_Section>
           )}
 
-          {/* Instructions */}
           <Info_Section
-            title="Instructions"
+            title={t('infoPage.instructions')}
             actions={
-              // EditPopover for AI-assisted editing with "Edit File" as secondary action
               <EditPopover
                 trigger={<EditButton />}
                 {...getEditConfig('skill-instructions', skill.path)}

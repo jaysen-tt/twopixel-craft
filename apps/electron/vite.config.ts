@@ -39,6 +39,7 @@ export default defineConfig({
     outDir: resolve(__dirname, 'dist/renderer'),
     emptyDirBeforeWrite: true,
     sourcemap: true,  // Source maps generated for debugging. Not uploaded to Sentry (see CLAUDE.md).
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'src/renderer/index.html'),

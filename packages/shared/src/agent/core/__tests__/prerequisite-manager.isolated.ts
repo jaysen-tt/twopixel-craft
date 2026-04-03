@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Tests for PrerequisiteManager
  *
  * Tests the prerequisite reading system that blocks tool calls
@@ -27,7 +34,7 @@ function guidePath(slug: string): string {
 }
 
 function browserDocPath(): string {
-  return resolve(join(homedir(), '.craft-agent', 'docs', 'browser-tools.md'));
+  return resolve(join(homedir(), '.twopixel', 'docs', 'browser-tools.md'));
 }
 
 describe('PrerequisiteManager', () => {

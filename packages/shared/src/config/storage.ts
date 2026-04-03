@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, statSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { getCredentialManager } from '../credentials/index.ts';
@@ -42,7 +49,7 @@ import type { Workspace, AuthType } from '@craft-agent/core/types';
 
 // Import LLM connection types and constants
 import type { LlmConnection } from './llm-connections.ts';
-import { isValidProviderAuthCombination, getDefaultModelsForConnection, getDefaultModelForConnection, isPiProvider, normalizeBedrockModelId, toBedrockNativeId, fromBedrockNativeId } from './llm-connections.ts';
+import { isValidProviderAuthCombination, getDefaultModelsForConnection, getDefaultModelForConnection, isPiProvider, normalizeBedrockModelId, toBedrockNativeId, fromBedrockNativeId, TWOPIXEL_BUILTIN_CONNECTION } from './llm-connections.ts';
 import {
   getModelProvider,
 } from './models.ts';
@@ -149,7 +156,7 @@ function syncConfigDefaults(): void {
 }
 
 /**
- * Load config defaults from ~/.craft-agent/config-defaults.json
+ * Load config defaults from ~/.twopixel/config-defaults.json
  * This file is synced from bundled assets on every launch.
  */
 export function loadConfigDefaults(): ConfigDefaults {
@@ -197,14 +204,26 @@ export function ensureConfigDir(): void {
   if (!existsSync(CONFIG_DIR)) {
     mkdirSync(CONFIG_DIR, { recursive: true });
   }
-  // Initialize bundled docs (creates ~/.craft-agent/docs/ with sources.md, agents.md, permissions.md)
-  initializeDocs();
+  try {
+    // Initialize bundled docs (creates ~/.twopixel/docs/ with sources.md, agents.md, permissions.md)
+    initializeDocs();
+  } catch (error) {
+    console.error('[config] Failed to initialize docs:', error);
+  }
 
-  // Initialize config defaults
-  ensureConfigDefaults();
+  try {
+    // Initialize config defaults
+    ensureConfigDefaults();
+  } catch (error) {
+    console.error('[config] Failed to initialize config defaults:', error);
+  }
 
-  // Initialize tool icons (CLI tool icons for turn card display)
-  ensureToolIcons();
+  try {
+    // Initialize tool icons (CLI tool icons for turn card display)
+    ensureToolIcons();
+  } catch (error) {
+    console.error('[config] Failed to initialize tool icons:', error);
+  }
 }
 
 export function loadStoredConfig(): StoredConfig | null {
@@ -255,18 +274,25 @@ export function loadStoredConfig(): StoredConfig | null {
 // - getClaudeOAuthToken() → credentialManager.getLlmOAuth(connectionSlug)
 
 export function saveConfig(config: StoredConfig): void {
-  ensureConfigDir();
+  try {
+    ensureConfigDir();
 
-  // Convert paths to portable form (~ prefix) for cross-machine compatibility
-  const storageConfig: StoredConfig = {
-    ...config,
-    workspaces: config.workspaces.map(ws => ({
-      ...ws,
-      rootPath: toPortablePath(ws.rootPath),
-    })),
-  };
+    // Convert paths to portable form (~ prefix) for cross-machine compatibility
+    const storageConfig: StoredConfig = {
+      ...config,
+      workspaces: config.workspaces.map(ws => ({
+        ...ws,
+        rootPath: toPortablePath(ws.rootPath),
+      })),
+    };
 
-  writeFileSync(CONFIG_FILE, JSON.stringify(storageConfig, null, 2), 'utf-8');
+    writeFileSync(CONFIG_FILE, JSON.stringify(storageConfig, null, 2), 'utf-8');
+    debug('[config] Saved config to', CONFIG_FILE);
+  } catch (error) {
+    console.error('[config] Failed to save config:', error);
+    debug('[config] Failed to save config:', error);
+    throw error;
+  }
 }
 
 // Legacy updateApiKey() removed - use setupLlmConnection IPC handler instead.
@@ -1014,7 +1040,7 @@ const APP_THEME_FILE = join(CONFIG_DIR, 'theme.json');
 const APP_THEMES_DIR = join(CONFIG_DIR, 'themes');
 
 /**
- * Get the path to the app-level theme override file (~/.craft-agent/theme.json).
+ * Get the path to the app-level theme override file (~/.twopixel/theme.json).
  */
 export function getAppThemePath(): string {
   return APP_THEME_FILE;
@@ -1025,7 +1051,7 @@ let presetsInitialized = false;
 
 /**
  * Get the app-level themes directory.
- * Preset themes are stored at ~/.craft-agent/themes/
+ * Preset themes are stored at ~/.twopixel/themes/
  */
 export function getAppThemesDir(): string {
   return APP_THEMES_DIR;
@@ -1448,6 +1474,41 @@ export function shouldRepairPiApiKeyCodexProvider(connection: Pick<LlmConnection
   return connection.authType === 'api_key' || connection.authType === 'api_key_with_endpoint';
 }
 
+function repairTwoPixelBuiltInConnection(connection: LlmConnection): boolean {
+  if (connection.slug !== TWOPIXEL_BUILTIN_CONNECTION.slug) return false;
+
+  let changed = false;
+
+  if (connection.providerType !== TWOPIXEL_BUILTIN_CONNECTION.providerType) {
+    connection.providerType = TWOPIXEL_BUILTIN_CONNECTION.providerType;
+    changed = true;
+  }
+
+  if (connection.authType !== TWOPIXEL_BUILTIN_CONNECTION.authType) {
+    connection.authType = TWOPIXEL_BUILTIN_CONNECTION.authType;
+    changed = true;
+  }
+
+  if (connection.baseUrl !== TWOPIXEL_BUILTIN_CONNECTION.baseUrl) {
+    connection.baseUrl = TWOPIXEL_BUILTIN_CONNECTION.baseUrl;
+    changed = true;
+  }
+
+  if (
+    connection.customEndpoint?.api !== TWOPIXEL_BUILTIN_CONNECTION.customEndpoint?.api
+  ) {
+    connection.customEndpoint = TWOPIXEL_BUILTIN_CONNECTION.customEndpoint;
+    changed = true;
+  }
+
+  if (connection.piAuthProvider !== TWOPIXEL_BUILTIN_CONNECTION.piAuthProvider) {
+    connection.piAuthProvider = TWOPIXEL_BUILTIN_CONNECTION.piAuthProvider;
+    changed = true;
+  }
+
+  return changed;
+}
+
 function normalizeModelIds(models?: Array<{ id: string } | string>): string[] {
   if (!models) return [];
   return models
@@ -1480,6 +1541,10 @@ function backfillAllConnectionModels(config: StoredConfig): boolean {
   if (!config.llmConnections) return false;
   let changed = false;
   for (const connection of config.llmConnections) {
+    if (repairTwoPixelBuiltInConnection(connection)) {
+      changed = true;
+    }
+
     // Repair previously broken API-key migration first.
     if (shouldRepairPiApiKeyCodexProvider(connection)) {
       connection.piAuthProvider = 'openai';
@@ -2295,11 +2360,20 @@ export function getLlmConnection(slug: string): LlmConnection | null {
 /**
  * Add a new LLM connection.
  * @param connection - Connection to add (slug must be unique)
- * @returns true if added, false if slug already exists
+ * @returns true if added, false if slug already exists or save failed
  */
 export function addLlmConnection(connection: LlmConnection): boolean {
-  const config = loadStoredConfig();
-  if (!config) return false;
+  let config = loadStoredConfig();
+  
+  // If no config exists, create a minimal one
+  if (!config) {
+    config = {
+      workspaces: [],
+      activeWorkspaceId: null,
+      activeSessionId: null,
+      llmConnections: [],
+    };
+  }
 
   // Initialize array if not yet migrated (safe default for write operations)
   if (!config.llmConnections) {
@@ -2320,8 +2394,14 @@ export function addLlmConnection(connection: LlmConnection): boolean {
   // Ensure default is set after adding first connection
   ensureDefaultLlmConnection(config);
 
-  saveConfig(config);
-  return true;
+  try {
+    saveConfig(config);
+    return true;
+  } catch (error) {
+    console.error('[config] Failed to save config in addLlmConnection:', error);
+    debug('[config] Failed to save config in addLlmConnection:', error);
+    return false;
+  }
 }
 
 /**
@@ -2630,7 +2710,7 @@ import { copyFileSync } from 'fs';
 const TOOL_ICONS_DIR_NAME = 'tool-icons';
 
 /**
- * Returns the path to the tool-icons directory: ~/.craft-agent/tool-icons/
+ * Returns the path to the tool-icons directory: ~/.twopixel/tool-icons/
  */
 export function getToolIconsDir(): string {
   return join(CONFIG_DIR, TOOL_ICONS_DIR_NAME);

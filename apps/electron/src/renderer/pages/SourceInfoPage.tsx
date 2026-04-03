@@ -1,12 +1,6 @@
-/**
- * SourceInfoPage
- *
- * Displays source details including connection info, authentication status,
- * documentation (guide.md), and metadata. View-only.
- */
-
 import * as React from 'react'
 import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle } from 'lucide-react'
 import { EditPopover, EditButton, getEditConfig } from '@/components/ui/EditPopover'
 import { SourceAvatar } from '@/components/ui/source-avatar'
@@ -168,6 +162,7 @@ function getPermissionsDescription(source: LoadedSource): string {
 }
 
 export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: SourceInfoPageProps) {
+  const { t } = useTranslation()
   const { navigateToSource } = useNavigation()
   const [source, setSource] = useState<LoadedSource | null>(null)
   const [loading, setLoading] = useState(true)
@@ -179,7 +174,6 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
   const [localMcpEnabled, setLocalMcpEnabled] = useState(true)
 
 
-  // Load source data
   useEffect(() => {
     let isMounted = true
     setLoading(true)
@@ -394,12 +388,10 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
             </Info_Alert>
           )}
 
-          {/* Connection */}
           <Info_Section
-            title="Connection"
+            title={t('infoPage.connection')}
             description={getConnectionDescription(source)}
             actions={
-              // EditPopover for AI-assisted config.json editing with "Edit File" as secondary action
               <EditPopover
                 trigger={<EditButton />}
                 {...getEditConfig('source-config', source.folderPath)}
@@ -420,7 +412,7 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
                 </div>
               )}
             >
-              <Info_Table.Row label="Type" value={source.config.type.toUpperCase()} />
+              <Info_Table.Row label={t('infoPage.type')} value={source.config.type.toUpperCase()} />
               {sourceUrl && (
                 <Info_Table.Row label="URL">
                   <button
@@ -431,17 +423,15 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
                   </button>
                 </Info_Table.Row>
               )}
-              <Info_Table.Row label="Last Tested" value={formatRelativeTime(source.config.lastTestedAt)} />
+              <Info_Table.Row label={t('infoPage.lastTested')} value={formatRelativeTime(source.config.lastTestedAt)} />
             </Info_Table>
           </Info_Section>
 
-          {/* Permissions - for API and local sources */}
           {source.config.type !== 'mcp' && permissionsConfig && apiPermissionsData.length > 0 && (
             <Info_Section
-              title="Permissions"
+              title={t('infoPage.permissions')}
               description={getPermissionsDescription(source)}
               actions={
-                // EditPopover for AI-assisted permissions.json editing
                 <EditPopover
                   trigger={<EditButton />}
                   {...getEditConfig('source-permissions', source.folderPath)}
@@ -452,17 +442,15 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
                 />
               }
             >
-              <PermissionsDataTable data={apiPermissionsData} fullscreen fullscreenTitle="Permissions" />
+              <PermissionsDataTable data={apiPermissionsData} fullscreen fullscreenTitle={t('infoPage.permissions')} />
             </Info_Section>
           )}
 
-          {/* Tools - for MCP sources */}
           {source.config.type === 'mcp' && (
             <Info_Section
-              title="Tools"
+              title={t('infoPage.tools')}
               description="Operations exposed by this server."
               actions={
-                // EditPopover for AI-assisted tool permissions editing
                 <EditPopover
                   trigger={<EditButton />}
                   {...getEditConfig('source-tool-permissions', source.folderPath)}
@@ -481,13 +469,11 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
             </Info_Section>
           )}
 
-          {/* Permissions - for MCP sources */}
           {source.config.type === 'mcp' && permissionsConfig && mcpPermissionsData.length > 0 && (
             <Info_Section
-              title="Permissions"
+              title={t('infoPage.permissions')}
               description={getPermissionsDescription(source)}
               actions={
-                // EditPopover for AI-assisted permissions.json editing
                 <EditPopover
                   trigger={<EditButton />}
                   {...getEditConfig('source-permissions', source.folderPath)}
@@ -498,17 +484,15 @@ export default function SourceInfoPage({ sourceSlug, workspaceId, onDelete }: So
                 />
               }
             >
-              <PermissionsDataTable data={mcpPermissionsData} hideTypeColumn fullscreen fullscreenTitle="Permissions" />
+              <PermissionsDataTable data={mcpPermissionsData} hideTypeColumn fullscreen fullscreenTitle={t('infoPage.permissions')} />
             </Info_Section>
           )}
 
-          {/* Documentation */}
           {source.guide?.raw && (
             <Info_Section
-              title="Documentation"
+              title={t('infoPage.documentation')}
               description="Context and guidelines for the agent."
               actions={
-                // EditPopover for AI-assisted guide.md editing with "Edit File" as secondary action
                 <EditPopover
                   trigger={<EditButton />}
                   {...getEditConfig('source-guide', source.folderPath)}

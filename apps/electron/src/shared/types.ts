@@ -237,6 +237,8 @@ export interface ElectronAPI {
 
   // App lifecycle
   relaunchApp(): Promise<void>
+  getAutoLaunch(): Promise<boolean>
+  setAutoLaunch(enable: boolean): Promise<boolean>
   removeWorkspace(workspaceId: string): Promise<boolean>
   invokeOnServer(url: string, token: string, channel: string, ...args: any[]): Promise<any>
 
@@ -320,6 +322,7 @@ export interface ElectronAPI {
   /** Returns the renderer host environment without going through RPC. */
   getRuntimeEnvironment(): 'electron' | 'web'
   getHomeDir(): Promise<string>
+  getAppRootPath(): Promise<string>
   isDebugMode(): Promise<boolean>
 
   // Transport connection status (preload-local, not RPC channels)
@@ -368,6 +371,7 @@ export interface ElectronAPI {
   showLogoutConfirmation(): Promise<boolean>
   showDeleteSessionConfirmation(name: string): Promise<boolean>
   logout(): Promise<void>
+  resetApp(): Promise<void>
 
   // Credential health check (startup validation)
   getCredentialHealth(): Promise<CredentialHealthStatus>

@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Tests for session ID validation to prevent path traversal attacks.
  * Security-critical: These tests verify protection against CVE-style vulnerabilities.
  *
@@ -163,7 +170,7 @@ describe('isValidSessionId', () => {
 // ============================================================
 
 describe('getSessionPath - defense in depth', () => {
-  const workspaceRoot = '/Users/test/.craft-agent/workspaces/test-workspace';
+  const workspaceRoot = '/Users/test/.twopixel/workspaces/test-workspace';
   const expectedSessionsDir = `${workspaceRoot}/sessions`;
 
   it('returns correct path for valid session IDs', () => {
@@ -204,7 +211,7 @@ describe('getSessionPath - defense in depth', () => {
 });
 
 describe('getSessionAttachmentsPath - defense in depth', () => {
-  const workspaceRoot = '/Users/test/.craft-agent/workspaces/test-workspace';
+  const workspaceRoot = '/Users/test/.twopixel/workspaces/test-workspace';
   const expectedSessionsDir = `${workspaceRoot}/sessions`;
 
   it('returns correct path for valid session IDs', () => {
@@ -234,7 +241,7 @@ describe('getSessionAttachmentsPath - defense in depth', () => {
 });
 
 describe('getSessionPlansPath - defense in depth', () => {
-  const workspaceRoot = '/Users/test/.craft-agent/workspaces/test-workspace';
+  const workspaceRoot = '/Users/test/.twopixel/workspaces/test-workspace';
   const expectedSessionsDir = `${workspaceRoot}/sessions`;
 
   it('sanitizes path traversal attempts', () => {
@@ -245,7 +252,7 @@ describe('getSessionPlansPath - defense in depth', () => {
 });
 
 describe('getSessionDownloadsPath - defense in depth', () => {
-  const workspaceRoot = '/Users/test/.craft-agent/workspaces/test-workspace';
+  const workspaceRoot = '/Users/test/.twopixel/workspaces/test-workspace';
   const expectedSessionsDir = `${workspaceRoot}/sessions`;
 
   it('sanitizes path traversal attempts', () => {
@@ -260,7 +267,7 @@ describe('getSessionDownloadsPath - defense in depth', () => {
 // ============================================================
 
 describe('path normalization safety', () => {
-  const workspaceRoot = '/Users/test/.craft-agent/workspaces/test-workspace';
+  const workspaceRoot = '/Users/test/.twopixel/workspaces/test-workspace';
 
   it('normalized path still stays within workspace', () => {
     const result = getSessionPath(workspaceRoot, '../../../tmp');

@@ -1173,9 +1173,9 @@ async function handleInit(msg: Extract<InboundMessage, { type: 'init' }>): Promi
   }
 
   initConfig = msg;
+  
+  debugLog(`[init] Received config: baseUrl=${msg.baseUrl}, customEndpoint=${JSON.stringify(msg.customEndpoint)}, models=${JSON.stringify(msg.customModels)}`);
 
-  // Azure OpenAI requires a tenant-specific endpoint URL.
-  // The Pi SDK (via Vercel AI SDK) reads AZURE_OPENAI_BASE_URL from env.
   if (msg.piAuth?.provider === 'azure-openai-responses' && msg.baseUrl) {
     process.env.AZURE_OPENAI_BASE_URL = msg.baseUrl;
     debugLog(`Set AZURE_OPENAI_BASE_URL=${msg.baseUrl}`);

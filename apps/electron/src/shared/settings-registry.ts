@@ -42,6 +42,7 @@ export const SETTINGS_PAGES = [
   { id: 'server', label: 'Server', description: 'Remote server access' },
   { id: 'shortcuts', label: 'Shortcuts', description: 'Keyboard shortcuts' },
   { id: 'preferences', label: 'Preferences', description: 'User preferences' },
+  { id: 'about', label: 'About', description: 'Version and app info' },
 ] as const satisfies readonly SettingsPageDefinition[]
 
 /**

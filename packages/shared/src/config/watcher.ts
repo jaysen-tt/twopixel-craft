@@ -1,15 +1,22 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Config File Watcher
  *
  * Watches configuration files for changes and triggers callbacks.
  * Uses recursive directory watching for simplicity and reliability.
  *
  * Watched paths:
- * - ~/.craft-agent/config.json - Main app configuration
- * - ~/.craft-agent/preferences.json - User preferences
- * - ~/.craft-agent/theme.json - App-level theme overrides
- * - ~/.craft-agent/themes/*.json - Preset theme files (app-level)
- * - ~/.craft-agent/workspaces/{slug}/ - Workspace directory (recursive)
+ * - ~/.twopixel/config.json - Main app configuration
+ * - ~/.twopixel/preferences.json - User preferences
+ * - ~/.twopixel/theme.json - App-level theme overrides
+ * - ~/.twopixel/themes/*.json - Preset theme files (app-level)
+ * - ~/.twopixel/workspaces/{slug}/ - Workspace directory (recursive)
  *   - sources/{slug}/config.json, guide.md, permissions.json
  *   - skills/{slug}/SKILL.md, icon.*
  *   - sessions/{id}/session.jsonl (header metadata only)
@@ -115,7 +122,7 @@ export interface ConfigWatcherCallbacks {
   onSkillsListChange?: (skills: LoadedSkill[]) => void;
 
   // Permissions callbacks
-  /** Called when app-level default permissions change (~/.craft-agent/permissions/default.json) */
+  /** Called when app-level default permissions change (~/.twopixel/permissions/default.json) */
   onDefaultPermissionsChange?: () => void;
   /** Called when workspace permissions.json changes */
   onWorkspacePermissionsChange?: (workspaceId: string) => void;
@@ -955,7 +962,7 @@ export class ConfigWatcher {
   }
 
   /**
-   * Watch app-level themes directory (~/.craft-agent/themes/)
+   * Watch app-level themes directory (~/.twopixel/themes/)
    */
   private watchAppThemesDir(): void {
     const themesDir = getAppThemesDir();
@@ -984,7 +991,7 @@ export class ConfigWatcher {
   }
 
   /**
-   * Watch app-level permissions directory (~/.craft-agent/permissions/)
+   * Watch app-level permissions directory (~/.twopixel/permissions/)
    * Watches for changes to default.json which contains the default read-only patterns
    */
   private watchAppPermissionsDir(): void {

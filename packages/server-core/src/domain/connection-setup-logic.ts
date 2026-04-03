@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Connection Setup Logic
  *
  * Pure functions extracted from ipc.ts for testability.
@@ -133,6 +140,12 @@ export const BUILT_IN_CONNECTION_TEMPLATES: Record<string, {
     authType: 'api_key',
     // piAuthProvider set dynamically from setup.piAuthProvider
   },
+  'twopixel-built-in': {
+    name: 'TwoPixel AI',
+    providerType: 'pi_compat',
+    authType: 'api_key_with_endpoint',
+    piAuthProvider: 'openai',
+  },
 }
 
 // ============================================================
@@ -196,6 +209,28 @@ export function createBuiltInConnection(slug: string, baseUrl?: string | null): 
   const suffixMatch = slug.match(/-(\d+)$/)
   if (suffixMatch && !BUILT_IN_CONNECTION_TEMPLATES[slug]) {
     name = `${name} ${suffixMatch[1]}`
+  }
+
+  // TwoPixel built-in connection has special configuration
+  if (slug === 'twopixel-built-in' || baseSlug === 'twopixel-built-in') {
+    return {
+      slug,
+      name,
+      providerType: 'pi_compat',
+      authType: 'api_key_with_endpoint',
+      baseUrl: 'http://43.160.252.207:16686/v1',
+      customEndpoint: { api: 'openai-completions' },
+      piAuthProvider: 'openai',
+      models: [
+        'deepseek-proxy',
+        'kimi-proxy',
+        'qwen-proxy',
+        'glm-proxy',
+        'gemini-proxy',
+      ],
+      defaultModel: 'deepseek-proxy',
+      createdAt: Date.now(),
+    }
   }
 
   return {

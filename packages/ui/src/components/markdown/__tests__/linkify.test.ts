@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Tests for linkify.ts — URL/file-path detection and markdown link preprocessing.
  *
  * Focuses on the bug where preprocessLinks() would detect bare domains inside
@@ -251,7 +258,7 @@ describe('detectLinks', () => {
 
 describe('isFilePathTarget', () => {
   it('accepts absolute unix image paths', () => {
-    expect(isFilePathTarget('/Users/balintorosz/.craft-agent/sessions/abc/image.jpg')).toBe(true)
+    expect(isFilePathTarget('/Users/balintorosz/.twopixel/sessions/abc/image.jpg')).toBe(true)
   })
 
   it('accepts parent-relative image paths', () => {

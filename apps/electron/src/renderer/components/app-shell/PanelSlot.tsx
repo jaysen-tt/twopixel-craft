@@ -15,6 +15,7 @@
 
 import { useCallback, useMemo } from 'react'
 import { useSetAtom } from 'jotai'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { X, ChevronLeft } from 'lucide-react'
 import { parseRouteToNavigationState } from '../../../shared/route-parser'
@@ -53,6 +54,7 @@ export function PanelSlot({
   sash,
   isCompact,
 }: PanelSlotProps) {
+  const { t } = useTranslation()
   const closePanel = useSetAtom(closePanelAtom)
   const setFocusedPanel = useSetAtom(focusedPanelIdAtom)
   const parentContext = useAppShellContext()
@@ -62,32 +64,27 @@ export function PanelSlot({
     closePanel(entry.id)
   }, [closePanel, entry.id])
 
-  // Build close button for PanelHeader (via context override)
   const closeButton = useMemo(() => {
     return (
       <PanelHeaderCenterButton
         icon={<X className="h-4 w-4" />}
         onClick={handleClose}
-        tooltip="Close"
+        tooltip={t('panel.close')}
       />
     )
-  }, [handleClose])
+  }, [handleClose, t])
 
-  // Build back button for compact mode — closes the panel to reveal the session list.
-  // Same PanelHeaderCenterButton style as X and share, just on the left side.
   const backButton = useMemo(() => {
     if (!isCompact) return undefined
     return (
       <PanelHeaderCenterButton
         icon={<ChevronLeft className="h-4 w-4" />}
         onClick={handleClose}
-        tooltip="Back to list"
+        tooltip={t('panel.backToList')}
       />
     )
-  }, [isCompact, handleClose])
+  }, [isCompact, handleClose, t])
 
-  // Override AppShellContext so ChatPage/PanelHeader gets our per-panel close button,
-  // back button (compact mode), and isFocusedPanel for input field appearance
   const contextOverride = useMemo(() => ({
     ...parentContext,
     rightSidebarButton: closeButton,

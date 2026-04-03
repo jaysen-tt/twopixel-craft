@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Command as CommandPrimitive } from 'cmdk'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'motion/react'
@@ -92,7 +93,23 @@ function formatTokenCount(tokens: number): string {
 }
 
 function stripPiPrefixForDisplay(value: string): string {
-  return value.startsWith('pi/') ? value.slice(3) : value
+  let display = value.startsWith('pi/') ? value.slice(3) : value;
+  // Map our custom proxy models to their specific latest version names
+  const proxyNameMap: Record<string, string> = {
+    'deepseek-proxy': 'DeepSeek R1',
+    'kimi-proxy': 'Kimi 2.5',
+    'qwen-proxy': 'Qwen Max',
+    'glm-proxy': 'GLM-5',
+    'glm-5-turbo-proxy': 'GLM-5-Turbo',
+    'glm-5.1-proxy': 'GLM-5.1',
+    'gemini-proxy': 'Gemini-3.1-Pro-Preview'
+  };
+
+  if (proxyNameMap[display]) {
+    return proxyNameMap[display];
+  }
+
+  return display;
 }
 
 function formatFollowUpChipText(text: string, fallback: string, maxLength = 50): string {
@@ -108,8 +125,17 @@ function formatFollowUpChipText(text: string, fallback: string, maxLength = 50):
 /** Platform-specific modifier key for keyboard shortcuts */
 const cmdKey = isMac ? '⌘' : 'Ctrl'
 
-/** Default rotating placeholders for onboarding/empty state */
-const DEFAULT_PLACEHOLDERS = [
+const DEFAULT_PLACEHOLDERS_ZH = [
+  '您想做什么？',
+  '使用 Shift + Tab 在探索和执行模式之间切换',
+  '输入 @ 提及文件、文件夹或技能',
+  '输入 # 为此对话添加标签',
+  '按 Shift + Return 换行',
+  `按 ${cmdKey} + B 切换侧边栏`,
+  `按 ${cmdKey} + . 进入专注模式`,
+]
+
+const DEFAULT_PLACEHOLDERS_EN = [
   'What would you like to work on?',
   'Use Shift + Tab to switch between Explore and Execute',
   'Type @ to mention files, folders, or skills',
@@ -247,7 +273,7 @@ export interface FreeFormInputProps {
  * - Active option badges
  */
 export function FreeFormInput({
-  placeholder = DEFAULT_PLACEHOLDERS,
+  placeholder,
   disabled = false,
   isProcessing = false,
   onSubmit,
@@ -289,6 +315,11 @@ export function FreeFormInput({
   onConnectionChange,
   connectionUnavailable = false,
 }: FreeFormInputProps) {
+  const { t, i18n } = useTranslation()
+  
+  const defaultPlaceholders = i18n.language === 'zh-CN' ? DEFAULT_PLACEHOLDERS_ZH : DEFAULT_PLACEHOLDERS_EN
+  const resolvedPlaceholder = placeholder ?? defaultPlaceholders
+  
   // Read connection default model, connections, and workspace info from context.
   // Uses optional variant so playground (no provider) doesn't crash.
   const appShellCtx = useOptionalAppShellContext()
@@ -404,10 +435,8 @@ export function FreeFormInput({
   const appShellContext = useOptionalAppShellContext()
   const isFocusedPanel = appShellContext?.isFocusedPanel ?? true
 
-  // Shuffle placeholder order once per mount so each session feels fresh
-  // Hide placeholder entirely when panel is unfocused in multi-panel layout
   const shuffledPlaceholder = React.useMemo(
-    () => Array.isArray(placeholder) ? shuffleArray(placeholder) : placeholder,
+    () => Array.isArray(resolvedPlaceholder) ? shuffleArray(resolvedPlaceholder) : resolvedPlaceholder,
     [] // eslint-disable-line react-hooks/exhaustive-deps -- intentionally shuffle only on mount
   )
   const effectivePlaceholder = isFocusedPanel ? shuffledPlaceholder : ''
@@ -1157,8 +1186,15 @@ export function FreeFormInput({
       }
     }
 
+    // Frustration Regex Check
+    let finalInput = input.trim();
+    const frustrationRegex = /(!!+|WTF|笨|总是出错|停|fuck|shit|idiot|stupid|无语|搞错|重来)/i;
+    if (frustrationRegex.test(finalInput)) {
+      finalInput = `[User_Frustrated: true]\n` + finalInput;
+    }
+
     onSubmit(
-      input.trim(),
+      finalInput,
       attachments.length > 0 ? attachments : undefined,
       mentions.skills.length > 0 ? mentions.skills : undefined
     )
@@ -1645,13 +1681,13 @@ export function FreeFormInput({
               ? attachments.length === 1
                 ? "1 file"
                 : `${attachments.length} files`
-              : "Attach Files"
+              : t('chat.input.attach')
             }
             isExpanded={isEmptySession}
             hasSelection={attachments.length > 0}
             showChevron={false}
             onClick={handleAttachClick}
-            tooltip="Attach files"
+            tooltip={t('chat.input.attach')}
             disabled={disabled}
           />
 
@@ -1696,12 +1732,12 @@ export function FreeFormInput({
                 }
                 label={
                   optimisticSourceSlugs.length === 0
-                    ? "Choose Sources"
+                    ? t('chat.input.chooseSources')
                     : (() => {
                         const enabledSources = sources.filter(s => optimisticSourceSlugs.includes(s.config.slug))
                         if (enabledSources.length === 1) return enabledSources[0].config.name
                         if (enabledSources.length === 2) return enabledSources.map(s => s.config.name).join(', ')
-                        return `${enabledSources.length} sources`
+                        return `${enabledSources.length} ${t('chat.input.sources').toLowerCase()}`
                       })()
                 }
                 isExpanded={isEmptySession}
@@ -1711,7 +1747,7 @@ export function FreeFormInput({
                 disabled={disabled}
                 data-tutorial="source-selector-button"
                 onClick={() => setSourceDropdownOpen(prev => !prev)}
-                tooltip="Sources"
+                tooltip={t('chat.input.sources')}
               />
 
               <SourceSelectorPopover
@@ -1982,6 +2018,17 @@ Model
             const usagePercent = contextStatus?.inputTokens && compactionThreshold
               ? Math.min(99, Math.round((contextStatus.inputTokens / compactionThreshold) * 100))
               : null
+              
+            // Auto-trigger silent compaction when hitting 85% of threshold
+            React.useEffect(() => {
+              if (usagePercent !== null && usagePercent >= 85 && !isProcessing && !contextStatus?.isCompacting) {
+                // Background trigger
+                setTimeout(() => {
+                  onSubmit('/compact', undefined)
+                }, 500)
+              }
+            }, [usagePercent, isProcessing, contextStatus?.isCompacting, onSubmit])
+
             // Show badge when >= 80% of compaction threshold AND not currently compacting
             // Hide for Codex and Copilot models which don't support context compaction
             const showWarning = usagePercent !== null && usagePercent >= 80 && !contextStatus?.isCompacting
@@ -2082,6 +2129,7 @@ function WorkingDirectoryBadge({
   isEmptySession?: boolean
   workspaceId?: string
 }) {
+  const { t } = useTranslation()
   const [recentDirs, setRecentDirs] = React.useState<string[]>([])
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   const [homeDir, setHomeDir] = React.useState<string>('')
@@ -2168,14 +2216,11 @@ function WorkingDirectoryBadge({
   // Show filter input only when more than 5 recent folders
   const showFilter = filteredRecent.length > 5
 
-  // Determine label - "Work in Folder" if not set or at session root, otherwise folder name
   const hasFolder = !!workingDirectory && workingDirectory !== sessionFolderPath
-  const folderName = hasFolder ? (getPathBasename(workingDirectory) || 'Folder') : 'Work in Folder'
+  const folderName = hasFolder ? (getPathBasename(workingDirectory) || 'Folder') : t('chat.input.workInFolder')
 
-  // Show reset option when a folder is selected and it differs from session folder
   const showReset = hasFolder && sessionFolderPath && sessionFolderPath !== workingDirectory
 
-  // Styles matching todo-filter-menu.tsx for consistency
   const MENU_CONTAINER_STYLE = 'min-w-[200px] max-w-[400px] overflow-hidden rounded-[8px] bg-background text-foreground shadow-modal-small p-0'
   const MENU_LIST_STYLE = 'max-h-[200px] overflow-y-auto p-1 [&_[cmdk-list-sizer]]:space-y-px'
   const MENU_ITEM_STYLE = 'flex cursor-pointer select-none items-center gap-2 rounded-[6px] px-3 py-1.5 text-[13px] outline-none'
@@ -2195,11 +2240,11 @@ function WorkingDirectoryBadge({
             tooltip={
               hasFolder ? (
                 <span className="flex flex-col gap-0.5">
-                  <span className="font-medium">Working directory</span>
+                  <span className="font-medium">{t('chat.input.workInFolder')}</span>
                   <span className="text-xs opacity-70">{formatPathForDisplay(workingDirectory, homeDir)}</span>
                   {gitBranch && <span className="text-xs opacity-70">on {gitBranch}</span>}
                 </span>
-              ) : "Choose working directory"
+              ) : t('chat.input.chooseWorkingDirectory')
             }
           />
         </span>

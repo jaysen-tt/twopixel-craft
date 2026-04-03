@@ -3,7 +3,7 @@
 set -e
 
 VERSIONS_URL="https://agents.craft.do/electron"
-DOWNLOAD_DIR="$HOME/.craft-agent/downloads"
+DOWNLOAD_DIR="$HOME/.twopixel/downloads"
 
 # Colors for output
 RED='\033[0;31m'
@@ -241,7 +241,7 @@ if [ "$OS_TYPE" = "darwin" ]; then
     zip_path="$installer_path"
 
     # Quit the app if it's running (use bundle ID for reliability)
-    APP_BUNDLE_ID="com.lukilabs.craft-agent"
+    APP_BUNDLE_ID="com.lukilabs.twopixel"
     if pgrep -x "Craft Agents" >/dev/null 2>&1; then
         info "Quitting Craft Agents..."
         osascript -e "tell application id \"$APP_BUNDLE_ID\" to quit" 2>/dev/null || true
@@ -315,7 +315,7 @@ else
     appimage_path="$installer_path"
 
     # New paths
-    APP_DIR="$HOME/.craft-agent/app"
+    APP_DIR="$HOME/.twopixel/app"
     WRAPPER_PATH="$INSTALL_DIR/craft-agents"
     APPIMAGE_INSTALL_PATH="$APP_DIR/Craft-Agents-x64.AppImage"
 
@@ -344,7 +344,7 @@ else
 #!/bin/bash
 # Craft Agent launcher - handles Linux-specific AppImage issues
 
-APPIMAGE_PATH="$HOME/.craft-agent/app/Craft-Agents-x64.AppImage"
+APPIMAGE_PATH="$HOME/.twopixel/app/Craft-Agents-x64.AppImage"
 ELECTRON_CACHE="$HOME/.config/@craft-agent"
 ELECTRON_CACHE_ALT="$HOME/.cache/@craft-agent"
 

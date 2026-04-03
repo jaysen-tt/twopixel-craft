@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Logo URL utility
  *
  * Returns Google Favicon URLs for APIs and MCP servers.
@@ -12,7 +19,7 @@ import { existsSync } from 'fs';
 import { readJsonFileSync } from './files.ts';
 
 // Cache path for persisted provider domains
-const CRAFT_AGENT_DIR = join(homedir(), '.craft-agent');
+const CRAFT_AGENT_DIR = join(homedir(), '.twopixel');
 const PROVIDER_DOMAINS_CACHE_PATH = join(CRAFT_AGENT_DIR, 'provider-domains.json');
 
 // Google Favicon V2 API - free, reliable, no API key needed

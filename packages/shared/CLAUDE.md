@@ -1,4 +1,4 @@
-# CLAUDE.md — `@craft-agent/shared`
+# CLAUDE.md — `@twopixel/shared`
 
 ## Purpose
 Core business logic package for Craft Agent:

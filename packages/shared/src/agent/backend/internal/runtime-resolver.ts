@@ -56,9 +56,23 @@ function resolveUpwards(base: string, relativePath: string, maxLevels = 4): stri
 
 function resolveBundledRuntimePath(hostRuntime: BackendHostRuntimeContext): string | undefined {
   const bunBinary = process.platform === 'win32' ? 'bun.exe' : 'bun';
-  const bunBasePath = process.platform === 'win32'
-    ? (hostRuntime.resourcesPath || hostRuntime.appRootPath)
-    : hostRuntime.appRootPath;
+  
+  if (hostRuntime.isPackaged) {
+    const unpackedRoot = hostRuntime.appRootPath.replace(/\.asar$/, '.asar.unpacked');
+    // Windows might use resourcesPath or extraResources root depending on packaging
+    const winRoot = hostRuntime.resourcesPath || hostRuntime.appRootPath;
+    const winUnpacked = winRoot.replace(/\.asar$/, '.asar.unpacked');
+    const extraResourceRoot = join(hostRuntime.appRootPath, '..', 'app');
+    
+    return firstExistingPath([
+      join(unpackedRoot, 'vendor', 'bun', bunBinary),
+      join(winUnpacked, 'vendor', 'bun', bunBinary),
+      join(extraResourceRoot, 'vendor', 'bun', bunBinary),
+      join(hostRuntime.appRootPath, 'vendor', 'bun', bunBinary),
+    ]);
+  }
+
+  const bunBasePath = hostRuntime.appRootPath;
   const bunPath = join(bunBasePath, 'vendor', 'bun', bunBinary);
   if (existsSync(bunPath)) return bunPath;
 
@@ -79,6 +93,8 @@ function resolveClaudeCliPath(hostRuntime: BackendHostRuntimeContext): string | 
   const sdkRelative = join('node_modules', '@anthropic-ai', 'claude-agent-sdk', 'cli.js');
   const result = firstExistingPath([
     join(hostRuntime.appRootPath, sdkRelative),
+    // electron-builder extraResources puts it in Contents/Resources/app/node_modules
+    join(hostRuntime.appRootPath, '..', 'app', sdkRelative),
     join(hostRuntime.appRootPath, '..', '..', sdkRelative),
   ]);
   if (result) return result;
@@ -124,8 +140,17 @@ function resolveCopilotCliPath(hostRuntime: BackendHostRuntimeContext): string |
   const binaryName = platform === 'win32' ? 'copilot.exe' : 'copilot';
 
   if (hostRuntime.isPackaged) {
-    const packaged = join(hostRuntime.appRootPath, 'vendor', 'copilot', `${platform}-${arch}`, binaryName);
-    return existsSync(packaged) ? packaged : undefined;
+    // If unpacked from ASAR, the physical executable is in app.asar.unpacked
+    const unpackedRoot = hostRuntime.appRootPath.replace(/\.asar$/, '.asar.unpacked');
+    
+    // Windows might have moved it to app/vendor/copilot in extraResources (see electron-builder.yml)
+    const extraResourceRoot = join(hostRuntime.appRootPath, '..', 'app');
+    
+    return firstExistingPath([
+      join(unpackedRoot, 'vendor', 'copilot', `${platform}-${arch}`, binaryName),
+      join(extraResourceRoot, 'vendor', 'copilot', `${platform}-${arch}`, binaryName),
+      join(hostRuntime.appRootPath, 'vendor', 'copilot', `${platform}-${arch}`, binaryName),
+    ]);
   }
 
   return resolveUpwards(
@@ -136,8 +161,16 @@ function resolveCopilotCliPath(hostRuntime: BackendHostRuntimeContext): string |
 
 function resolveServerPath(hostRuntime: BackendHostRuntimeContext, serverName: string): string | undefined {
   if (hostRuntime.isPackaged) {
+    // If the server is unpacked from ASAR via asarUnpack in electron-builder.yml,
+    // the physical file will be in app.asar.unpacked.
+    // Node handles app.asar transparently, but external binaries (like bun) DO NOT.
+    // So we must use the app.asar.unpacked path for external execution.
+    const unpackedRoot = hostRuntime.appRootPath.replace(/\.asar$/, '.asar.unpacked');
+    
     return firstExistingPath([
+      join(unpackedRoot, 'resources', serverName, 'index.js'),
       join(hostRuntime.appRootPath, 'resources', serverName, 'index.js'),
+      join(unpackedRoot, 'dist', 'resources', serverName, 'index.js'),
       join(hostRuntime.appRootPath, 'dist', 'resources', serverName, 'index.js'),
     ]);
   }
@@ -167,6 +200,10 @@ function resolveRipgrepPath(hostRuntime: BackendHostRuntimeContext): string | un
   if (hostRuntime.isPackaged) {
     const packaged = join(hostRuntime.appRootPath, ripgrepRelative);
     if (existsSync(packaged)) return packaged;
+    
+    // electron-builder extraResources puts it in Contents/Resources/app/node_modules
+    const extraResourcePath = join(hostRuntime.appRootPath, '..', 'app', ripgrepRelative);
+    if (existsSync(extraResourcePath)) return extraResourcePath;
   }
 
   const fromHostRoot = resolveUpwards(hostRuntime.appRootPath, ripgrepRelative, 10);

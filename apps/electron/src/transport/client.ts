@@ -120,6 +120,7 @@ export class WsRpcClient implements RpcClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private connectTimer: ReturnType<typeof setTimeout> | null = null
   private backoffResetTimer: ReturnType<typeof setTimeout> | null = null
+  private pingTimer: ReturnType<typeof setInterval> | null = null
   private destroyed = false
   /** Set when server sends shuttingDown — prevents reconnection attempts. */
   private permanentlyClosed = false
@@ -408,6 +409,19 @@ export class WsRpcClient implements RpcClient {
         lastSeq: reconnectSnapshot?.lastSeq,
       }
       this.trySendEnvelope(ws, handshake)
+      
+      // Start ping timer to proactively detect dead connections
+      if (this.pingTimer) clearInterval(this.pingTimer)
+      this.pingTimer = setInterval(() => {
+        if (this.connected && this.ws?.readyState === WebSocket.OPEN) {
+          // Invoke ping with a short timeout to fail fast
+          this.invoke('server:ping').catch(err => {
+            if (!this.destroyed && this.connected) {
+              this.reconnectNow()
+            }
+          })
+        }
+      }, 15_000)
     }
 
     ws.onmessage = (event) => {
@@ -452,6 +466,10 @@ export class WsRpcClient implements RpcClient {
     if (this.connectTimer) {
       clearTimeout(this.connectTimer)
       this.connectTimer = null
+    }
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer)
+      this.pingTimer = null
     }
     if (this.ackTimer) {
       clearInterval(this.ackTimer)
@@ -691,6 +709,11 @@ export class WsRpcClient implements RpcClient {
         clientId: this.clientId,
         lastSeq: this.lastSeenSeq,
       }
+    }
+
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer)
+      this.pingTimer = null
     }
 
     const manualReconnect = this.manualReconnectRequested

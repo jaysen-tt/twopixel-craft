@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { useState, useEffect, useCallback } from "react"
 import { ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -22,7 +29,7 @@ interface AddWorkspaceStep_CreateNewProps {
  *
  * Fields:
  * - Workspace name (required)
- * - Location: Default (~/.craft-agent/workspaces/) or Custom
+ * - Location: Default (~/.twopixel/workspaces/) or Custom
  */
 export function AddWorkspaceStep_CreateNew({
   onBack,
@@ -42,7 +49,7 @@ export function AddWorkspaceStep_CreateNew({
   }, [])
 
   const slug = slugify(name)
-  const defaultBasePath = homeDir ? `${homeDir}/.craft-agent/workspaces` : null
+  const defaultBasePath = homeDir ? `${homeDir}/.twopixel/workspaces` : null
   const finalPath = locationOption === 'default'
     ? (defaultBasePath && slug ? `${defaultBasePath}/${slug}` : null)
     : customPath && slug
@@ -151,7 +158,7 @@ export function AddWorkspaceStep_CreateNew({
             onChange={() => setLocationOption('default')}
             disabled={isCreating}
             title="Default location"
-            subtitle="under .craft-agent folder"
+            subtitle="under .twopixel folder"
           />
 
           {/* Custom location option */}

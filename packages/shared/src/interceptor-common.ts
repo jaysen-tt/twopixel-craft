@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Shared infrastructure for the unified network interceptor.
  *
  * The interceptor runs as a preload script in SDK subprocesses (Claude, Copilot, Pi).
@@ -27,7 +34,7 @@ export const DEBUG = INTERCEPTOR_LOGGING_ENABLED &&
   (process.argv.includes('--debug') || process.env.CRAFT_DEBUG === '1');
 
 /** Config file path for reading settings in the SDK subprocess */
-export const CONFIG_FILE = join(homedir(), '.craft-agent', 'config.json');
+export const CONFIG_FILE = join(homedir(), '.twopixel', 'config.json');
 
 /** Session directory — set by env var (subprocess) or setSessionDir() (main process) */
 let _sessionDir: string | null = process.env.CRAFT_SESSION_DIR || null;
@@ -36,7 +43,7 @@ let _sessionDir: string | null = process.env.CRAFT_SESSION_DIR || null;
 // LOGGING
 // ============================================================================
 
-export const LOG_DIR = join(homedir(), '.craft-agent', 'logs');
+export const LOG_DIR = join(homedir(), '.twopixel', 'logs');
 export const LOG_FILE = join(LOG_DIR, 'interceptor.log');
 
 // Ensure log directory exists at module load
@@ -169,7 +176,7 @@ function getErrorFilePath(): string {
   // Prefer session-scoped file to avoid cross-session error consumption.
   if (_sessionDir) return join(_sessionDir, 'api-error.json');
   // Fallback for legacy/non-session contexts.
-  return join(homedir(), '.craft-agent', 'api-error.json');
+  return join(homedir(), '.twopixel', 'api-error.json');
 }
 
 function getStoredError(sessionDir?: string): LastApiError | null {

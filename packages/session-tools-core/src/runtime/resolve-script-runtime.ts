@@ -97,11 +97,22 @@ function resolveBundledUv(ctx?: ResolveScriptRuntimeContext): string | null {
 
   const resourcesPath = getProcessResourcesPath();
 
-  return firstExistingPath([
-    resourcesBase ? join(resourcesBase, 'resources', 'bin', platformDir, binary) : '',
-    appRoot ? join(appRoot, 'resources', 'bin', platformDir, binary) : '',
-    resourcesPath ? join(resourcesPath, 'app', 'resources', 'bin', platformDir, binary) : '',
-  ]);
+  const candidates: string[] = [];
+
+  if (resourcesBase) {
+    candidates.push(join(resourcesBase.replace(/\.asar$/, '.asar.unpacked'), 'resources', 'bin', platformDir, binary));
+    candidates.push(join(resourcesBase, 'resources', 'bin', platformDir, binary));
+  }
+  if (appRoot) {
+    candidates.push(join(appRoot.replace(/\.asar$/, '.asar.unpacked'), 'resources', 'bin', platformDir, binary));
+    candidates.push(join(appRoot, 'resources', 'bin', platformDir, binary));
+  }
+  if (resourcesPath) {
+    candidates.push(join(resourcesPath, 'app.asar.unpacked', 'resources', 'bin', platformDir, binary));
+    candidates.push(join(resourcesPath, 'app', 'resources', 'bin', platformDir, binary));
+  }
+
+  return firstExistingPath(candidates);
 }
 
 function resolveBundledNode(ctx?: ResolveScriptRuntimeContext): string | null {
@@ -109,21 +120,41 @@ function resolveBundledNode(ctx?: ResolveScriptRuntimeContext): string | null {
   const resourcesBase = resolveResourcesBase(ctx);
   const appRoot = resolveAppRoot(ctx);
 
-  return firstExistingPath([
-    resourcesBase ? join(resourcesBase, 'vendor', 'node', binary) : '',
-    appRoot ? join(appRoot, 'vendor', 'node', binary) : '',
-  ]);
+  const candidates: string[] = [];
+  if (resourcesBase) {
+    candidates.push(join(resourcesBase.replace(/\.asar$/, '.asar.unpacked'), 'vendor', 'node', binary));
+    candidates.push(join(resourcesBase, 'vendor', 'node', binary));
+  }
+  if (appRoot) {
+    candidates.push(join(appRoot.replace(/\.asar$/, '.asar.unpacked'), 'vendor', 'node', binary));
+    candidates.push(join(appRoot, 'vendor', 'node', binary));
+  }
+
+  return firstExistingPath(candidates);
 }
 
 function resolveBundledBun(ctx?: ResolveScriptRuntimeContext): string | null {
   const binary = process.platform === 'win32' ? 'bun.exe' : 'bun';
   const resourcesBase = resolveResourcesBase(ctx);
   const appRoot = resolveAppRoot(ctx);
+  
+  const resourcesPath = getProcessResourcesPath();
 
-  return firstExistingPath([
-    resourcesBase ? join(resourcesBase, 'vendor', 'bun', binary) : '',
-    appRoot ? join(appRoot, 'vendor', 'bun', binary) : '',
-  ]);
+  const candidates: string[] = [];
+  if (resourcesBase) {
+    candidates.push(join(resourcesBase.replace(/\.asar$/, '.asar.unpacked'), 'vendor', 'bun', binary));
+    candidates.push(join(resourcesBase, 'vendor', 'bun', binary));
+  }
+  if (appRoot) {
+    candidates.push(join(appRoot.replace(/\.asar$/, '.asar.unpacked'), 'vendor', 'bun', binary));
+    candidates.push(join(appRoot, 'vendor', 'bun', binary));
+  }
+  if (resourcesPath) {
+    candidates.push(join(resourcesPath, 'app.asar.unpacked', 'vendor', 'bun', binary));
+    candidates.push(join(resourcesPath, 'app', 'vendor', 'bun', binary));
+  }
+
+  return firstExistingPath(candidates);
 }
 
 function validatePackagedEnvRuntime(command: string, label: string): string {

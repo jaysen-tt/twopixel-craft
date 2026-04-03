@@ -1,15 +1,16 @@
 {
-  "name": "@craft-agent/electron",
-  "version": "0.8.1",
-  "description": "Electron desktop app for Craft Agents",
+  "name": "twopixel",
+  "version": "0.1.0",
+  "productName": "TwoPixel",
+  "description": "TwoPixel Desktop - AI Agent Application",
   "main": "dist/main.cjs",
   "private": true,
   "author": {
-    "name": "Craft Docs Ltd.",
-    "email": "support@craft.do"
+    "name": "TwoPixel",
+    "email": "support@2pixel.cn"
   },
-  "homepage": "https://agents.craft.do",
-  "license": "MIT",
+  "homepage": "https://2pixel.cn",
+  "license": "Apache-2.0",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
@@ -20,7 +21,7 @@
     "build:preload": "esbuild src/preload/bootstrap.ts --bundle --platform=node --format=cjs --outfile=dist/bootstrap-preload.cjs --external:electron",
     "build:preload-toolbar": "esbuild src/preload/browser-toolbar.ts --bundle --platform=node --format=cjs --outfile=dist/browser-toolbar-preload.cjs --external:electron",
     "build:interceptor": "esbuild ../../packages/shared/src/unified-network-interceptor.ts --bundle --platform=node --format=cjs --outfile=dist/interceptor.cjs",
-    "build:renderer": "vite build",
+    "build:renderer": "export NODE_OPTIONS=--max-old-space-size=8192 && vite build",
     "build:copy": "bun scripts/copy-assets.ts",
     "build:validate": "bun scripts/validate-assets.ts",
     "build": "bun run lint && bun run build:main && bun run build:preload && bun run build:preload-toolbar && bun run build:interceptor && bun run build:renderer && bun run build:copy && bun run build:validate",
@@ -35,7 +36,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
-  "dependencies": {
+  "dependencies_backup": {
     "@craft-agent/core": "workspace:*",
     "@craft-agent/shared": "workspace:*",
     "@craft-agent/server-core": "workspace:*",
@@ -74,5 +75,9 @@
   },
   "devDependencies": {
     "@types/ws": "^8.18.1"
+  },
+  "build": {
+    "productName": "TwoPixel",
+    "appId": "com.twopixel.app"
   }
 }

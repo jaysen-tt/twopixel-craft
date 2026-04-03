@@ -1,16 +1,13 @@
 /**
- * PreferencesPage
- *
- * Form-based editor for stored user preferences (~/.craft-agent/preferences.json).
- * Features:
- * - Fixed input fields for known preferences (name, timezone, location, language)
- * - Free-form textarea for notes
- * - Parses JSON on load, serializes back on save
- * - Save/Revert buttons
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
  */
 
 import * as React from 'react'
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -115,16 +112,15 @@ function FormField({
 }
 
 export default function PreferencesPage() {
+  const { t } = useTranslation()
   const [formState, setFormState] = useState<PreferencesFormState>(emptyFormState)
   const [originalState, setOriginalState] = useState<PreferencesFormState>(emptyFormState)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
-  // Deep compare for dirty state
   const isDirty = JSON.stringify(formState) !== JSON.stringify(originalState)
 
-  // Load stored user preferences on mount
   useEffect(() => {
     const load = async () => {
       try {
@@ -185,7 +181,7 @@ export default function PreferencesPage() {
   const headerActions = (
     <div className="flex items-center gap-1.5">
       <button
-        onClick={() => window.electronAPI.showInFolder('~/.craft-agent/preferences.json')}
+        onClick={() => window.electronAPI.showInFolder('~/.twopixel/preferences.json')}
         className="flex items-center gap-1 text-xs h-7 px-2 rounded-md bg-foreground/5 hover:bg-foreground/10 text-muted-foreground"
         title={`Show in ${getFileManagerName()}`}
       >
@@ -222,28 +218,27 @@ export default function PreferencesPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Preferences" actions={headerActions} />
+      <PanelHeader title={t('preferences.title')} actions={headerActions} />
       <Separator />
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
-          {/* Basic Info */}
           <section>
             <SectionHeader>Basic Info</SectionHeader>
             <div className="space-y-1">
               <FormField
-                label="Name"
+                label={t('preferences.name')}
                 value={formState.name}
                 onChange={(v) => updateField('name', v)}
-                placeholder="Your name"
+                placeholder={t('preferences.namePlaceholder')}
               />
               <FormField
-                label="Timezone"
+                label={t('preferences.timezone')}
                 value={formState.timezone}
                 onChange={(v) => updateField('timezone', v)}
                 placeholder="e.g., America/New_York"
               />
               <FormField
-                label="Language"
+                label={t('preferences.language')}
                 value={formState.language}
                 onChange={(v) => updateField('language', v)}
                 placeholder="e.g., English"
@@ -251,18 +246,17 @@ export default function PreferencesPage() {
             </div>
           </section>
 
-          {/* Location */}
           <section>
             <SectionHeader>Location</SectionHeader>
             <div className="space-y-1">
               <FormField
-                label="City"
+                label={t('preferences.city')}
                 value={formState.city}
                 onChange={(v) => updateField('city', v)}
                 placeholder="e.g., New York"
               />
               <FormField
-                label="Country"
+                label={t('preferences.country')}
                 value={formState.country}
                 onChange={(v) => updateField('country', v)}
                 placeholder="e.g., USA"
@@ -270,7 +264,6 @@ export default function PreferencesPage() {
             </div>
           </section>
 
-          {/* Notes */}
           <section>
             <SectionHeader>Notes</SectionHeader>
             <Textarea

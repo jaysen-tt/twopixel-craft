@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import type { EventSink } from '@craft-agent/server-core/transport'
 import type { ISessionManager, IBrowserPaneManager } from '@craft-agent/server-core/handlers'
 import { createScopedLogger, CONSOLE_LOGGER, type PlatformServices, type Logger } from '@craft-agent/server-core/runtime'
@@ -6,7 +13,7 @@ import { existsSync } from 'fs'
 import { readFile, writeFile, mkdir, realpath } from 'fs/promises'
 import { homedir, tmpdir } from 'os'
 import { randomUUID } from 'node:crypto'
-import { type AgentEvent, setPermissionMode, hydratePreviousPermissionMode, getPermissionModeDiagnostics, type PermissionMode, unregisterSessionScopedToolCallbacks, mergeSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest, type BrowserPaneFns, generateConversationSummary } from '@craft-agent/shared/agent'
+import { type AgentEvent, setPermissionMode, hydratePreviousPermissionMode, getPermissionModeDiagnostics, type PermissionMode, unregisterSessionScopedToolCallbacks, mergeSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest, type BrowserPaneFns, generateConversationSummary, extractAndStoreMemory } from '@craft-agent/shared/agent'
 import {
   resolveSessionConnection,
   createBackendFromConnection,
@@ -537,7 +544,7 @@ async function getBrowserToolIconDataUrl(): Promise<string | undefined> {
   try {
     const iconCandidates = [
       join(getToolIconsDir(), BROWSER_TOOL_ICON_FILENAME),
-      // Dev fallback (before sync to ~/.craft-agent/tool-icons)
+      // Dev fallback (before sync to ~/.twopixel/tool-icons)
       join(process.cwd(), 'apps', 'electron', 'resources', 'tool-icons', BROWSER_TOOL_ICON_FILENAME),
       // Packaged fallback (app resources)
       join(process.resourcesPath, 'tool-icons', BROWSER_TOOL_ICON_FILENAME),
@@ -671,7 +678,7 @@ async function resolveToolDisplayMeta(
 
   // CLI tool icon resolution for Bash commands
   // Parses the command string to detect known tools (git, npm, docker, etc.)
-  // and resolves their brand icon from ~/.craft-agent/tool-icons/
+  // and resolves their brand icon from ~/.twopixel/tool-icons/
   if (toolName === 'Bash' && toolInput?.command) {
     try {
       const toolIconsDir = getToolIconsDir()
@@ -1035,6 +1042,8 @@ export class SessionManager implements ISessionManager {
   }> = new Map()
   // Privileged approval binding + audit logger
   private privilegedExecutionBroker = new PrivilegedExecutionBroker(sessionLog)
+  // Heartbeat timer for background tasks
+  private heartbeatTimer: NodeJS.Timeout | null = null
   // Session-local admin remember windows (exact command hash binding)
   private adminRememberApprovals: Map<string, {
     createdAt: number
@@ -1545,6 +1554,61 @@ export class SessionManager implements ISessionManager {
     }
   }
 
+  // --- Heartbeat Background Engine ---
+  private startHeartbeat(): void {
+    if (this.heartbeatTimer) return;
+    
+    // Check every 1 minute (adjust based on needs, can be configurable)
+    this.heartbeatTimer = setInterval(async () => {
+      try {
+        const { getHeartbeatTasks } = await import('@craft-agent/shared/config');
+        const tasks = getHeartbeatTasks();
+        if (tasks.length === 0) return;
+
+        // Find active sessions that might need a heartbeat
+        for (const [sessionId, managed] of this.sessions.entries()) {
+          // Only wake up waiting sessions
+          if (managed.sessionStatus === 'waiting_for_user') {
+            const taskDescriptions = tasks.map((t: any) => `- ${t.description}`).join('\n');
+            const prompt = `[SYSTEM HEARTBEAT] Please check the following background tasks quietly:\n${taskDescriptions}\n\nIf everything is normal and no user action is needed, reply ONLY with exactly "HEARTBEAT_OK". Do not include any other text. If there is an issue, describe it.`;
+            
+            sessionLog.info(`[Heartbeat] Waking up session ${sessionId} for background tasks`);
+            
+            // Push invisible message
+            const messageId = randomUUID();
+            managed.messages.push({
+              id: messageId,
+              role: 'user',
+              content: prompt,
+              createdAt: Date.now(),
+              isHidden: true // Custom flag so UI doesn't render it if we choose
+            } as any);
+            
+            managed.messageQueue.push({
+              type: 'prompt',
+              id: messageId,
+              message: prompt,
+              systemPrompt: '', // uses existing
+            });
+            
+            managed.sessionStatus = 'processing';
+            this.sendEvent({ type: 'session_status_changed', sessionId, sessionStatus: 'processing' }, managed.workspace.id);
+            this.processNextQueuedMessage(sessionId);
+          }
+        }
+      } catch (e) {
+        sessionLog.error('[Heartbeat] Error during heartbeat execution:', e);
+      }
+    }, 60 * 1000);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
   async initialize(): Promise<void> {
     try {
       // Backfill missing `models` arrays on existing LLM connections
@@ -1562,6 +1626,9 @@ export class SessionManager implements ISessionManager {
 
       // Load existing sessions from disk
       this.loadSessionsFromDisk()
+
+      // Start background heartbeat engine
+      this.startHeartbeat()
 
       // Signal that initialization is complete — IPC handlers waiting on initGate will proceed
       this.initGate.markReady()
@@ -3587,6 +3654,7 @@ export class SessionManager implements ISessionManager {
   async setSessionStatus(sessionId: string, sessionStatus: SessionStatus): Promise<void> {
     const managed = this.sessions.get(sessionId)
     if (managed) {
+      const isNewlyDone = sessionStatus === 'done' && managed.sessionStatus !== 'done';
       managed.sessionStatus = sessionStatus
       // Persist in-memory state directly to avoid race with pending queue writes
       this.persistSession(managed)
@@ -3598,6 +3666,18 @@ export class SessionManager implements ISessionManager {
       // https://github.com/oven-sh/bun/issues/15939
       const watcher = this.configWatchers.get(managed.workspace.rootPath)
       watcher?.notifyFileChange(`sessions/${sessionId}/session.jsonl`)
+
+      // Extract memory quietly when session finishes
+      if (isNewlyDone && managed.messages && managed.agent) {
+        sessionLog.info(`[Memory] Starting background memory extraction for session ${sessionId}...`);
+        extractAndStoreMemory(
+          sessionId,
+          managed.messages,
+          managed.agent.runMiniCompletion.bind(managed.agent)
+        ).catch(e => {
+          sessionLog.warn(`[Memory] Background extraction failed: ${e}`);
+        });
+      }
     }
   }
 
@@ -4900,8 +4980,12 @@ export class SessionManager implements ISessionManager {
       // in session JSONL (line ~3952); this only affects the SDK's in-process context.
       let effectiveMessage = message
       if (managed.wasInterrupted) {
-        effectiveMessage = `${message}\n\n<system-reminder>The previous assistant response was interrupted by the user and may be incomplete. Do not repeat or continue the interrupted response unless asked. Focus on the new message above.</system-reminder>`
+        effectiveMessage = `${effectiveMessage}\n\n<system-reminder>The previous assistant response was interrupted by the user and may be incomplete. Do not repeat or continue the interrupted response unless asked. Focus on the new message above.</system-reminder>`
         managed.wasInterrupted = false
+      }
+      
+      if (options?.origin === 'mobile') {
+        effectiveMessage = `${effectiveMessage}\n\n<system-reminder>The user sent this message from the TwoPixel Mobile App. Please keep your response concise and mobile-friendly unless asked otherwise. You can still perform actions on the desktop.</system-reminder>`
       }
 
       sendSpan.mark('chat.starting')
@@ -5860,6 +5944,10 @@ export class SessionManager implements ISessionManager {
     switch (event.type) {
       case 'text_delta':
         managed.streamingText += event.text
+        // Heartbeat interceptor for deltas to prevent UI flickering
+        if (managed.streamingText === 'HEARTBEAT_OK' || 'HEARTBEAT_OK'.startsWith(managed.streamingText.trim())) {
+          break; // Suppress delta
+        }
         // Queue delta for batched sending (performance: reduces IPC from 50+/sec to ~20/sec)
         this.queueDelta(sessionId, workspaceId, event.text, event.turnId)
         break
@@ -5867,6 +5955,12 @@ export class SessionManager implements ISessionManager {
       case 'text_complete': {
         // Flush any pending deltas before sending complete (ensures renderer has all content)
         this.flushDelta(sessionId, workspaceId)
+
+        // Heartbeat interceptor
+        if (event.text.trim() === 'HEARTBEAT_OK') {
+          sessionLog.info(`[Heartbeat] Suppressed HEARTBEAT_OK message for session ${sessionId}`)
+          break // Skip saving to messages array and sending event
+        }
 
         const assistantMessage: Message = {
           id: generateMessageId(),
@@ -6987,6 +7081,8 @@ export class SessionManager implements ISessionManager {
    */
   cleanup(): void {
     sessionLog.info('Cleaning up resources...')
+    
+    this.stopHeartbeat()
 
     // Stop all ConfigWatchers (file system watchers)
     for (const [path, watcher] of this.configWatchers) {

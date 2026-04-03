@@ -1,8 +1,15 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Auto-update module using electron-updater
  *
  * Handles checking for updates, downloading, and installing via the standard
- * electron-updater library. Updates are served from https://agents.craft.do/electron/latest
+ * electron-updater library. Updates are served from https://agents.2pixel.cn/electron/latest
  * using the generic provider (YAML manifests + binaries on R2/S3).
  *
  * Platform behavior:

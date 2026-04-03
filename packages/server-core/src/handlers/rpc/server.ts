@@ -16,6 +16,7 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.server.GET_HEALTH,
   RPC_CHANNELS.server.GET_ACTIVE_SESSIONS,
   RPC_CHANNELS.server.HOME_DIR,
+  RPC_CHANNELS.server.PING,
 ] as const
 
 export function registerServerHandlers(
@@ -120,6 +121,14 @@ export function registerServerHandlers(
 
   server.handle(RPC_CHANNELS.server.HOME_DIR, async () => {
     return homedir()
+  })
+
+  // -----------------------------------------------------------------------
+  // Ping
+  // -----------------------------------------------------------------------
+
+  server.handle(RPC_CHANNELS.server.PING, async () => {
+    return 'pong'
   })
 }
 

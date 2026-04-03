@@ -1,6 +1,7 @@
-appId: com.lukilabs.craft-agent
-productName: Craft Agents
-copyright: Copyright © 2026 Craft Docs Ltd.
+appId: cn.2pixel.desktop
+productName: TwoPixel
+copyright: Copyright © 2026 TwoPixel.
+artifactName: "TwoPixel-${version}-${arch}.${ext}"
 
 electronVersion: "39.2.7"
 
@@ -10,6 +11,9 @@ afterPack: scripts/afterPack.cjs
 directories:
   output: release
   buildResources: resources
+
+npmRebuild: false
+buildDependenciesFromSource: false
 
 files:
   - dist/**/*
@@ -21,6 +25,8 @@ files:
   - resources/session-mcp-server/**/*
   # Include Pi agent server subprocess for Pi SDK sessions
   - resources/pi-agent-server/**/*
+  # Include built-in MCP servers
+  - packages/builtin-mcps/**/*
   # Note: Bundled assets (docs, themes, permissions, tool-icons) are in resources/
   # and copied to dist/resources/ by build:copy. They're included via dist/**/* above.
   # Include network interceptor for API error capture and MCP schema injection
@@ -61,6 +67,12 @@ files:
   # Exclude everything from node_modules (will use extraResources for SDK)
   - "!node_modules/**/*"
 
+extraResources:
+  - from: "../../LICENSE"
+    to: "LICENSE"
+  - from: "../../NOTICE"
+    to: "NOTICE"
+
 # SDK is included as per-platform extraResources (below) to bypass node_modules auto-exclusion
 # and to apply platform-specific ripgrep binary filtering.
 # Since electron-builder v20.15.2, directories named "node_modules" are automatically excluded.
@@ -73,10 +85,18 @@ extraMetadata:
 # Auto-update: electron-updater fetches from this URL for update manifests (.yml files)
 publish:
   provider: generic
-  url: https://agents.craft.do/electron/latest
+  url: https://agents.2pixel.cn/electron/latest
 
-# Disable ASAR to avoid decompression overhead and click delays
-asar: false
+# Use ASAR to dramatically improve macOS performance (prevents Gatekeeper from scanning 10k+ files)
+asar: true
+asarUnpack:
+  - "vendor/**/*"
+  - "resources/bin/**/*"
+  - "resources/scripts/**/*"
+  - "resources/pi-agent-server/**/*"
+  - "resources/session-mcp-server/**/*"
+  - "resources/bridge-mcp-server/**/*"
+  - "packages/builtin-mcps/**/*"
 
 mac:
   category: public.app-category.productivity
@@ -115,21 +135,21 @@ mac:
     - "!**/resources/bin/win32-*/**"
     - "!**/resources/bin/linux-*/**"
   # Use predictable naming for macOS packages (applies to zip; dmg uses its own config below)
-  artifactName: "Craft-Agents-${arch}.${ext}"
-  # Code signing & notarization (disabled by default for local builds)
-  # To enable: set CSC_LINK, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
-  # notarize:
-  #   teamId: ${APPLE_TEAM_ID}
+  # Ensure the product name is set correctly so the .app name matches what electron-builder expects
+  artifactName: "TwoPixel-${arch}.${ext}"
+  # Code signing & notarization
+  notarize: true
+  identity: "9E1D50773E716EABD18929221C447826046B7847"
 
 dmg:
-  # Use predictable naming: Craft-Agents-arm64.dmg, Craft-Agents-x64.dmg
-  artifactName: "Craft-Agents-${arch}.dmg"
+  # Use predictable naming: TwoPixel-arm64.dmg, TwoPixel-x64.dmg
+  artifactName: "TwoPixel-${arch}.dmg"
   # Custom background (multi-resolution TIFF with 1x+2x for retina support)
   background: resources/dmg-background.tiff
   # Use app icon as the mounted volume icon in Finder
   icon: resources/icon.icns
   iconSize: 80
-  title: "Craft Agents"
+  title: "TwoPixel"
   contents:
     - x: 130
       y: 200
@@ -147,8 +167,8 @@ win:
     - target: nsis
       arch:
         - x64
-  # Use predictable naming: Craft-Agents-x64.exe
-  artifactName: "Craft-Agents-${arch}.${ext}"
+  # Use predictable naming: TwoPixel-x64.exe
+  artifactName: "TwoPixel-${arch}.${ext}"
   files:
     # Exclude binaries for other platforms
     - "!**/vendor/codex/darwin-*/**"

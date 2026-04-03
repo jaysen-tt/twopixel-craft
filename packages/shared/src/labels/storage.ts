@@ -35,12 +35,12 @@ export function getDefaultLabelConfig(): WorkspaceLabelConfig {
     labels: [
       {
         id: 'development',
-        name: 'Development',
+        name: '开发 (Development)',
         color: { light: '#3B82F6', dark: '#60A5FA' },
         children: [
           {
             id: 'code',
-            name: 'Code',
+            name: '代码 (Code)',
             color: { light: '#4F46E5', dark: '#818CF8' }, // indigo shift
           },
           {
@@ -50,42 +50,42 @@ export function getDefaultLabelConfig(): WorkspaceLabelConfig {
           },
           {
             id: 'automation',
-            name: 'Automation',
+            name: '自动化 (Automation)',
             color: { light: '#06B6D4', dark: '#22D3EE' }, // cyan shift
           },
         ],
       },
       {
         id: 'content',
-        name: 'Content',
+        name: '内容 (Content)',
         color: { light: '#8B5CF6', dark: '#A78BFA' },
         children: [
           {
             id: 'writing',
-            name: 'Writing',
+            name: '写作 (Writing)',
             color: { light: '#7C3AED', dark: '#C4B5FD' }, // deeper violet
           },
           {
             id: 'research',
-            name: 'Research',
+            name: '调研 (Research)',
             color: { light: '#A855F7', dark: '#C084FC' }, // lighter purple
           },
           {
             id: 'design',
-            name: 'Design',
+            name: '设计 (Design)',
             color: { light: '#D946EF', dark: '#E879F9' }, // fuchsia shift
           },
         ],
       },
       {
         id: 'priority',
-        name: 'Priority',
+        name: '优先级 (Priority)',
         color: { light: '#F59E0B', dark: '#FBBF24' },
         valueType: 'number',
       },
       {
         id: 'project',
-        name: 'Project',
+        name: '项目 (Project)',
         color: 'foreground/50',
         valueType: 'string',
       },

@@ -504,11 +504,13 @@ export class PiAgent extends BaseAgent {
       | { type: 'iam'; accessKeyId: string; secretAccessKey: string; region?: string; sessionToken?: string }
   } | null> {
     const piAuthProvider = getBackendRuntime(this.config).piAuthProvider;
+    const slug = this.config.connectionSlug || 'pi';
+    this.debug(`getPiAuth: piAuthProvider=${piAuthProvider}, slug=${slug}, authType=${this.config.authType}`);
+    
     if (!piAuthProvider) return null;
 
     try {
       const credentialManager = getCredentialManager();
-      const slug = this.config.connectionSlug || 'pi';
 
       if (this.config.authType === 'oauth') {
         const oauth = await credentialManager.getLlmOAuth(slug);
@@ -559,7 +561,9 @@ export class PiAgent extends BaseAgent {
         // NOTE: authType === 'environment' (e.g. Bedrock with ~/.aws/credentials)
         // intentionally falls through here, finds no API key, and returns null.
         // The subprocess inherits process.env which contains the AWS credential chain.
+        this.debug(`Attempting to get API key for slug: ${slug}`);
         const apiKey = await credentialManager.getLlmApiKey(slug);
+        this.debug(`API key result: ${apiKey ? 'found' : 'not found'}`);
         if (apiKey) {
           this.debug(`Retrieved API key credential for Pi provider: ${piAuthProvider}`);
           return {

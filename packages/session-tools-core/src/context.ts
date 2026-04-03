@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Session Tools Core - Context Interface
  *
  * Defines the abstract context interface that both Claude (in-process)
@@ -156,7 +163,7 @@ export interface SessionToolContext {
   /** Unique session identifier */
   sessionId: string;
 
-  /** Absolute path to workspace folder (~/.craft-agent/workspaces/{id}) */
+  /** Absolute path to workspace folder (~/.twopixel/workspaces/{id}) */
   workspacePath: string;
 
   /** Path to sources folder within workspace */
@@ -293,7 +300,7 @@ export interface SessionToolContext {
 
   /**
    * Submit developer feedback. Injected by each backend:
-   * - Claude: writes JSON files to ~/.craft-agent/feedback/
+   * - Claude: writes JSON files to ~/.twopixel/feedback/
    * - Codex/Pi: could send over IPC or write directly
    */
   submitFeedback?(feedback: import('./types.ts').DeveloperFeedback): void;

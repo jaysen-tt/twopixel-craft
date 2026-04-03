@@ -1,11 +1,18 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Source Types
  *
  * Sources are external data connections (MCP servers, APIs, local filesystems).
  * They replace the old "connections" concept with a more flexible, folder-based architecture.
  *
  * File structure:
- * ~/.craft-agent/workspaces/{workspaceId}/sources/{sourceSlug}/
+ * ~/.twopixel/workspaces/{workspaceId}/sources/{sourceSlug}/
  *   ├── config.json   - Source settings
  *   └── guide.md      - Usage guidelines + cached data (in YAML frontmatter)
  */
@@ -416,7 +423,7 @@ export interface LoadedSource {
   /** Absolute path to source folder (for resolving relative icon paths) */
   folderPath: string;
 
-  /** Absolute path to workspace folder (e.g., ~/.craft-agent/workspaces/xxx) */
+  /** Absolute path to workspace folder (e.g., ~/.twopixel/workspaces/xxx) */
   workspaceRootPath: string;
 
   /**

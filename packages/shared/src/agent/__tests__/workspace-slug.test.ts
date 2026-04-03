@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Tests for extractWorkspaceSlug utility and qualifySkillName
  *
  * extractWorkspaceSlug (packages/shared/src/utils/workspace.ts) is used in
@@ -103,11 +110,11 @@ describe('workspace slug extraction', () => {
   })
 
   it('handles Windows-style paths with backslashes', () => {
-    expect(extractWorkspaceSlug('C:\\Users\\ghalmos\\.craft-agent\\workspaces\\my-workspace', fallback)).toBe('my-workspace')
+    expect(extractWorkspaceSlug('C:\\Users\\ghalmos\\.twopixel\\workspaces\\my-workspace', fallback)).toBe('my-workspace')
   })
 
   it('handles Windows paths with tilde and backslashes', () => {
-    expect(extractWorkspaceSlug('~\\.craft-agent\\workspaces\\my-workspace', fallback)).toBe('my-workspace')
+    expect(extractWorkspaceSlug('~\\.twopixel\\workspaces\\my-workspace', fallback)).toBe('my-workspace')
   })
 
   it('handles hyphenated workspace names', () => {

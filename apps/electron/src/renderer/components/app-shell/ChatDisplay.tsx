@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import * as React from "react"
 import { useEffect, useState, useMemo, useCallback } from "react"
 import {
@@ -1105,7 +1112,7 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
   const [overlayState, setOverlayState] = useState<OverlayState>(null)
 
   // Diff viewer settings - loaded from user preferences on mount, persisted on change
-  // These settings are stored in ~/.craft-agent/preferences.json (not localStorage)
+  // These settings are stored in ~/.twopixel/preferences.json (not localStorage)
   const [diffViewerSettings, setDiffViewerSettings] = useState<Partial<DiffViewerSettings>>({})
 
   // Load diff viewer settings from preferences on mount

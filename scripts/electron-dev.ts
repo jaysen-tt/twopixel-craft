@@ -77,7 +77,7 @@ function detectInstance(): void {
     process.env.CRAFT_INSTANCE_NUMBER = instanceNum;
     process.env.CRAFT_VITE_PORT = `${instanceNum}173`;
     process.env.CRAFT_APP_NAME = `Craft Agents [${instanceNum}]`;
-    process.env.CRAFT_CONFIG_DIR = join(process.env.HOME || "", `.craft-agent-${instanceNum}`);
+    process.env.CRAFT_CONFIG_DIR = join(process.env.HOME || "", `.twopixel-${instanceNum}`);
     process.env.CRAFT_DEEPLINK_SCHEME = `craftagents${instanceNum}`;
     console.log(`🔢 Instance ${instanceNum} detected: port=${process.env.CRAFT_VITE_PORT}, config=${process.env.CRAFT_CONFIG_DIR}`);
   }
@@ -213,15 +213,15 @@ async function buildMcpServers(): Promise<void> {
   // Build Pi agent server with bun (not esbuild) because its Pi SDK deps are ESM-only.
   // esbuild with packages:external leaves them as require() calls which fail at runtime.
   // Optional: skip if package directory is missing (e.g., not synced to OSS).
-  if (existsSync(join(PI_AGENT_SERVER_DIR, "src"))) {
+  if (existsSync(PI_AGENT_SERVER_DIR)) {
     const piResult = await buildPiAgentServer();
     if (!piResult.success) {
-      console.error("❌ Pi agent server build failed:", piResult.error);
+      console.error("❌ Failed to build Pi agent server:", piResult.error);
       process.exit(1);
     }
     console.log("✅ Pi agent server built");
   } else {
-    console.log("⏭️  Pi agent server skipped (package not found)");
+    console.log("⏭️  Pi agent server skipped (package not present)");
   }
 }
 

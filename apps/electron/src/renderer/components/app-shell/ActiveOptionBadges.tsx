@@ -7,6 +7,7 @@ import { PERMISSION_MODE_CONFIG, type PermissionMode } from '@craft-agent/shared
 import type { BackgroundTask } from './ActiveTasksBar'
 import { LabelIcon, LabelValueTypeIcon } from '@/components/ui/label-icon'
 import { LabelValuePopover } from '@/components/ui/label-value-popover'
+import { useTranslation } from 'react-i18next'
 import type { LabelConfig } from '@craft-agent/shared/labels'
 import { flattenLabels, parseLabelEntry, formatLabelEntry } from '@craft-agent/shared/labels'
 import { resolveEntityColor } from '@craft-agent/shared/colors'
@@ -271,6 +272,7 @@ function LabelBadge({
 }) {
   const { isDark } = useTheme()
   const [open, setOpen] = React.useState(false)
+  const { t } = useTranslation()
 
   // Auto-open the value popover when this label was just added via # menu
   // and has a valueType. Opens exactly once, then clears the signal.
@@ -335,6 +337,7 @@ function StateBadge({
   sessionId?: string
 }) {
   const [open, setOpen] = React.useState(false)
+  const { t } = useTranslation()
 
   const handleSelect = React.useCallback((stateId: string) => {
     setOpen(false)
@@ -349,7 +352,7 @@ function StateBadge({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <MetadataBadge
-          label={state.label}
+          label={t(`status.${state.id}`, state.label)}
           badgeColor={badgeColor}
           interactive
           isActive={open}
@@ -468,7 +471,7 @@ function SessionInfoPopoverContent({ sessionId, sessionFolderPath }: { sessionId
     <div className="h-full min-h-0 flex flex-col">
       <div className="shrink-0 p-3 border-b border-border/50">
         <label className="text-xs font-medium text-muted-foreground block mb-1.5 select-none">
-          Title
+          标题 (Title)
         </label>
         <div className="rounded-lg bg-foreground-2 has-[:focus]:bg-background shadow-minimal transition-colors">
           <Input
@@ -543,6 +546,19 @@ function PermissionModeDropdown({ permissionMode, onPermissionModeChange, sessio
   }
   const currentStyle = modeStyles[optimisticMode]
 
+  const getModeLabel = (mode: PermissionMode) => {
+    switch (mode) {
+      case 'safe':
+        return '探索 (Explore)'
+      case 'ask':
+        return '询问编辑 (Ask to Edit)'
+      case 'allow-all':
+        return '执行 (Execute)'
+      default:
+        return config?.displayName ?? ''
+    }
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -556,7 +572,7 @@ function PermissionModeDropdown({ permissionMode, onPermissionModeChange, sessio
           style={{ '--shadow-color': currentStyle.shadowVar } as React.CSSProperties}
         >
           <PermissionModeIcon mode={optimisticMode} className="h-3.5 w-3.5" />
-          <span>{config.displayName}</span>
+          <span>{getModeLabel(optimisticMode)}</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-60" />
         </button>
       </PopoverTrigger>

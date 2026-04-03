@@ -1,0 +1,19 @@
+{
+  "name": "system-agent",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node-notifier": "^8.0.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "node-notifier": "^10.0.1",
+    "say": "^0.16.0",
+    "zod": "^4.3.6"
+  }
+}

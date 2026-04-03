@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react"
+import { useTranslation } from 'react-i18next'
 import { useSetAtom } from "jotai"
 import { isToday, isYesterday, format, startOfDay } from "date-fns"
 import { useAction } from "@/actions"
@@ -92,9 +93,9 @@ interface SessionListProps {
 // Re-export SessionStatusId for use by parent components
 export type { SessionStatusId }
 
-function formatDateGroupLabel(date: Date): string {
-  if (isToday(date)) return 'Today'
-  if (isYesterday(date)) return 'Yesterday'
+function formatDateGroupLabel(date: Date, t: any): string {
+  if (isToday(date)) return t('sidebar.dateGroups.today', '今天')
+  if (isYesterday(date)) return t('sidebar.dateGroups.yesterday', '昨天')
   return format(date, 'MMM d')
 }
 
@@ -136,6 +137,7 @@ export function SessionList({
   onNavigateToSession,
   hasPendingPrompt,
 }: SessionListProps) {
+  const { t } = useTranslation()
   const setSendToWorkspace = useSetAtom(sendToWorkspaceAtom)
 
   // --- Selection (atom-backed, shared with ChatDisplay + BatchActionPanel) ---
@@ -337,7 +339,7 @@ export function SessionList({
       if (!groupsByKey.has(groupKey)) {
         groupsByKey.set(groupKey, {
           key: groupKey,
-          label: formatDateGroupLabel(day),
+          label: formatDateGroupLabel(day, t),
           items: [],
           collapsible: true,
         })
@@ -352,7 +354,7 @@ export function SessionList({
         const date = new Date(meta.key)
         groupsByKey.set(meta.key, {
           key: meta.key,
-          label: formatDateGroupLabel(date),
+          label: formatDateGroupLabel(date, t),
           items: [],
           collapsible: true,
           collapsedCount: meta.count,
@@ -590,14 +592,12 @@ export function SessionList({
     sessionOptions, contentSearchResults, hasPendingPrompt,
   ])
 
-  // --- Empty state (non-search) — render before EntityList ---
-  // Don't show empty state when there are collapsed groups with content
   if (flatRows.length === 0 && rowData.groups.length === 0 && !searchActive) {
     if (currentFilter?.kind === 'archived') {
       return (
         <EntityListEmptyScreen
           icon={<Archive />}
-          title="No archived sessions"
+          title={t('sidebar.noArchivedSessions')}
           description="Sessions you archive will appear here. Archive sessions to keep your list tidy while preserving conversations."
           className="h-full"
         />
@@ -607,7 +607,7 @@ export function SessionList({
     return (
       <EntityListEmptyScreen
         icon={<Inbox />}
-        title="No sessions yet"
+        title={t('sidebar.noSessionsYet')}
         description="Sessions with your agent appear here. Start one to get going."
         className="h-full"
       >
@@ -620,7 +620,7 @@ export function SessionList({
           }}
           className="inline-flex items-center h-7 px-3 text-xs font-medium rounded-[8px] bg-background shadow-minimal hover:bg-foreground/[0.03] transition-colors"
         >
-          New Session
+          {t('sidebar.newSession')}
         </button>
       </EntityListEmptyScreen>
     )
@@ -676,15 +676,15 @@ export function SessionList({
         emptyState={
           isSearchMode && !isSearchingContent ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
-              <p className="text-sm text-muted-foreground">No sessions found</p>
+              <p className="text-sm text-muted-foreground">{t('sidebar.noSessionsFound')}</p>
               <p className="text-xs text-muted-foreground/60 mt-0.5">
-                Searched titles and message content
+                {t('sidebar.searchedContent')}
               </p>
               <button
                 onClick={() => onSearchChange?.('')}
                 className="text-xs text-foreground hover:underline mt-2"
               >
-                Clear search
+                {t('sidebar.clearSearch')}
               </button>
             </div>
           ) : undefined
@@ -715,7 +715,7 @@ export function SessionList({
       <RenameDialog
         open={renameDialogOpen}
         onOpenChange={setRenameDialogOpen}
-        title="Rename Session"
+        title={t('sidebar.renameSession')}
         value={renameName}
         onValueChange={setRenameName}
         onSubmit={handleRenameSubmit}

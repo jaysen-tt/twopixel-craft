@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from "react"
+import { useTranslation } from 'react-i18next'
 import { Check, ExternalLink } from "lucide-react"
 import type { ApiSetupMethod } from "./APISetupStep"
 import { StepFormLayout, BackButton, ContinueButton } from "./primitives"

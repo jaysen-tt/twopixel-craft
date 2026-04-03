@@ -112,6 +112,7 @@ export interface AppShellContextType {
   onOpenKeyboardShortcuts: () => void
   onOpenStoredUserPreferences: () => void
   onReset: () => void
+  onLogout: () => void
 
   // Unified session options callback
   onSessionOptionsChange: (sessionId: string, updates: SessionOptionUpdates) => void

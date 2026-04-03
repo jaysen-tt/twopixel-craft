@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -15,48 +16,46 @@ interface KeyboardShortcutsDialogProps {
 
 interface ShortcutItem {
   keys: string[]
-  description: string
+  descriptionKey: string
 }
 
 interface ShortcutSection {
-  title: string
+  titleKey: string
   shortcuts: ShortcutItem[]
 }
 
-// Component-specific shortcuts that aren't in the centralized registry
-// These are context-sensitive behaviors, not global actions
 const componentSpecificSections: ShortcutSection[] = [
   {
-    title: 'List Navigation',
+    titleKey: 'dialog.keyboardShortcuts.listNavigation',
     shortcuts: [
-      { keys: ['↑', '↓'], description: 'Navigate items in list' },
-      { keys: ['Home'], description: 'Go to first item' },
-      { keys: ['End'], description: 'Go to last item' },
+      { keys: ['↑', '↓'], descriptionKey: 'dialog.keyboardShortcuts.navigateItems' },
+      { keys: ['Home'], descriptionKey: 'dialog.keyboardShortcuts.goToFirst' },
+      { keys: ['End'], descriptionKey: 'dialog.keyboardShortcuts.goToLast' },
     ],
   },
   {
-    title: 'Session List',
+    titleKey: 'dialog.keyboardShortcuts.sessionList',
     shortcuts: [
-      { keys: ['Enter'], description: 'Focus chat input' },
-      { keys: ['Delete'], description: 'Delete session' },
-      { keys: ['R'], description: 'Rename session' },
-      { keys: ['Right-click'], description: 'Open context menu' },
-      { keys: [isMac ? '⌥' : 'Alt', 'Click'], description: 'Add filter as excluded' },
+      { keys: ['Enter'], descriptionKey: 'dialog.keyboardShortcuts.focusChat' },
+      { keys: ['Delete'], descriptionKey: 'dialog.keyboardShortcuts.deleteSession' },
+      { keys: ['R'], descriptionKey: 'dialog.keyboardShortcuts.renameSession' },
+      { keys: ['Right-click'], descriptionKey: 'dialog.keyboardShortcuts.openContextMenu' },
+      { keys: [isMac ? '⌥' : 'Alt', 'Click'], descriptionKey: 'dialog.keyboardShortcuts.addFilterExcluded' },
     ],
   },
   {
-    title: 'Agent Tree',
+    titleKey: 'dialog.keyboardShortcuts.agentTree',
     shortcuts: [
-      { keys: ['←'], description: 'Collapse folder' },
-      { keys: ['→'], description: 'Expand folder' },
+      { keys: ['←'], descriptionKey: 'dialog.keyboardShortcuts.collapseFolder' },
+      { keys: ['→'], descriptionKey: 'dialog.keyboardShortcuts.expandFolder' },
     ],
   },
   {
-    title: 'Chat Input',
+    titleKey: 'dialog.keyboardShortcuts.chatInput',
     shortcuts: [
-      { keys: ['Enter'], description: 'Send message' },
-      { keys: ['Shift', 'Enter'], description: 'New line' },
-      { keys: ['Esc'], description: 'Close dialog / blur input' },
+      { keys: ['Enter'], descriptionKey: 'dialog.keyboardShortcuts.sendMessage' },
+      { keys: ['Shift', 'Enter'], descriptionKey: 'dialog.keyboardShortcuts.newLine' },
+      { keys: ['Esc'], descriptionKey: 'dialog.keyboardShortcuts.closeDialog' },
     ],
   },
 ]
@@ -114,19 +113,17 @@ function RegistrySection({ category, actionIds }: { category: string; actionIds:
   )
 }
 
-/**
- * Renders a section of static shortcuts (component-specific)
- */
 function StaticSection({ section }: { section: ShortcutSection }) {
+  const { t } = useTranslation()
   return (
     <div>
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-        {section.title}
+        {t(section.titleKey)}
       </h3>
       <div className="space-y-1.5">
         {section.shortcuts.map((shortcut, index) => (
           <div key={index} className="flex items-center justify-between py-1">
-            <span className="text-sm">{shortcut.description}</span>
+            <span className="text-sm">{t(shortcut.descriptionKey)}</span>
             <div className="flex items-center gap-1">
               {shortcut.keys.map((key, keyIndex) => (
                 <Kbd key={keyIndex}>{key}</Kbd>
@@ -140,17 +137,16 @@ function StaticSection({ section }: { section: ShortcutSection }) {
 }
 
 export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcutsDialogProps) {
-  // Register with modal context so X button / Cmd+W closes this dialog first
+  const { t } = useTranslation()
   useRegisterModal(open, () => onOpenChange(false))
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+          <DialogTitle>{t('dialog.keyboardShortcuts.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-2">
-          {/* Registry-driven sections */}
           {Object.entries(actionsByCategory).map(([category, actions]) => (
             <RegistrySection
               key={category}
@@ -159,9 +155,8 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
             />
           ))}
 
-          {/* Component-specific sections */}
           {componentSpecificSections.map((section) => (
-            <StaticSection key={section.title} section={section} />
+            <StaticSection key={section.titleKey} section={section} />
           ))}
         </div>
       </DialogContent>

@@ -1,5 +1,6 @@
 import * as React from "react"
 import { useState, useCallback, useRef } from "react"
+import { useTranslation } from 'react-i18next'
 import { Check, FolderPlus, ExternalLink, ChevronDown, Cloud, CloudOff, Trash2 } from "lucide-react"
 import { AnimatePresence } from "motion/react"
 import { useSetAtom } from "jotai"
@@ -51,6 +52,7 @@ export function WorkspaceSwitcher({
   onWorkspaceRemoved,
   workspaceUnreadMap,
 }: WorkspaceSwitcherProps) {
+  const { t } = useTranslation()
   const [showCreationScreen, setShowCreationScreen] = useState(false)
   const [reconnectTarget, setReconnectTarget] = useState<Workspace | null>(null)
   const setFullscreenOverlayOpen = useSetAtom(fullscreenOverlayOpenAtom)
@@ -188,7 +190,7 @@ export function WorkspaceSwitcher({
             <button
               type="button"
               className="header-icon-btn titlebar-no-drag ml-1 flex-1 min-w-0 flex items-center justify-start gap-0.5 h-[30px] px-3 rounded-[8px] border border-foreground/6 text-[13px] text-foreground/50 hover:bg-foreground/5 hover:text-foreground transition-colors cursor-pointer data-[state=open]:bg-foreground/5 data-[state=open]:text-foreground"
-              aria-label="Select workspace"
+              aria-label={t('workspace.selectWorkspace')}
             >
               <CrossfadeAvatar
                 src={selectedWorkspace ? workspaceIconMap.get(selectedWorkspace.id) : undefined}
@@ -214,7 +216,7 @@ export function WorkspaceSwitcher({
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isCollapsed && "h-9 w-9 shrink-0 justify-center p-0"
               )}
-              aria-label="Select workspace"
+              aria-label={t('workspace.selectWorkspace')}
             >
               <CrossfadeAvatar
                 src={selectedWorkspace ? workspaceIconMap.get(selectedWorkspace.id) : undefined}
@@ -284,7 +286,6 @@ export function WorkspaceSwitcher({
                   {workspaceUnreadMap?.[workspace.id] && <span className="h-2 w-2 rounded-full bg-accent shrink-0" />}
                 </div>
                 <div className="flex items-center gap-1">
-                  {/* Action buttons - only visible on hover for non-active workspaces */}
                   {activeWorkspaceId !== workspace.id && (
                     <button
                       className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/20 hover:text-destructive transition-opacity"
@@ -292,7 +293,7 @@ export function WorkspaceSwitcher({
                         e.stopPropagation()
                         handleRemoveWorkspace(workspace)
                       }}
-                      title="Remove workspace"
+                      title={t('workspace.removeWorkspace')}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -304,7 +305,7 @@ export function WorkspaceSwitcher({
                         e.stopPropagation()
                         onSelect(workspace.id, true)
                       }}
-                      title="Open in new window"
+                      title={t('workspace.openInNewWindow')}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </button>

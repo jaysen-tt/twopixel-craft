@@ -1,0 +1,16 @@
+{
+  "name": "image-generator",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@google/genai": "^1.47.0",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  }
+}

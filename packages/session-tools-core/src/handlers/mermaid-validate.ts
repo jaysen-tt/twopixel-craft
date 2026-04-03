@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Mermaid Validate Handler
  *
  * Validates Mermaid diagram syntax using beautiful-mermaid parser.
@@ -48,7 +55,7 @@ export async function handleMermaidValidate(
         text: JSON.stringify({
           valid: false,
           error: errorMessage,
-          suggestion: 'Check the syntax against ~/.craft-agent/docs/mermaid.md',
+          suggestion: 'Check the syntax against ~/.twopixel/docs/mermaid.md',
         }, null, 2),
       }],
       isError: true,

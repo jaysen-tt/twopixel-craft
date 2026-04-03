@@ -2,8 +2,8 @@
 
 This guide explains how to configure automations in Craft Agent to automate workflows based on events.
 
-> **CLI-first workflow (recommended):** Use `craft-agent automation ...` commands instead of editing JSON directly.
-> - `craft-agent automation --help`
+> **CLI-first workflow (recommended):** Use `twopixel automation ...` commands instead of editing JSON directly.
+> - `twopixel automation --help`
 > - Canonical command reference: [craft-cli.md](./craft-cli.md)
 
 ## What Are Automations?
@@ -19,24 +19,24 @@ Automations allow you to trigger actions automatically when specific events occu
 Automations are configured in `automations.json` at the root of your workspace:
 
 ```
-~/.craft-agent/workspaces/{workspaceId}/automations.json
+~/.twopixel/workspaces/{workspaceId}/automations.json
 ```
 
 ## Recommended CLI Commands
 
 ```bash
-craft-agent automation list
-craft-agent automation get <id>
-craft-agent automation create --event UserPromptSubmit --prompt "..."
-craft-agent automation update <id> --json '{...}'
-craft-agent automation enable <id>
-craft-agent automation disable <id>
-craft-agent automation duplicate <id>
-craft-agent automation history [<id>] --limit 20
-craft-agent automation last-executed <id>
-craft-agent automation test <id> --match "..."
-craft-agent automation lint
-craft-agent automation validate
+twopixel automation list
+twopixel automation get <id>
+twopixel automation create --event UserPromptSubmit --prompt "..."
+twopixel automation update <id> --json '{...}'
+twopixel automation enable <id>
+twopixel automation disable <id>
+twopixel automation duplicate <id>
+twopixel automation history [<id>] --limit 20
+twopixel automation last-executed <id>
+twopixel automation test <id> --match "..."
+twopixel automation lint
+twopixel automation validate
 ```
 
 ## Basic Structure
@@ -728,7 +728,7 @@ A single automation can have both prompt and webhook actions. They execute in or
             "method": "POST",
             "headers": {
               "Authorization": "Bearer ${CRAFT_WH_API_TOKEN}",
-              "X-Source": "craft-agent"
+              "X-Source": "twopixel"
             },
             "body": {
               "event": "${CRAFT_EVENT}",

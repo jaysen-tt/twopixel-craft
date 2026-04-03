@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { useEffect, useState } from "react"
 import { isMac } from "@/lib/platform"
 import { useActionLabel } from "@/actions"
@@ -265,7 +272,7 @@ export function AppMenu({
               Help
             </StyledDropdownMenuSubTrigger>
             <StyledDropdownMenuSubContent>
-              <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs')}>
+              <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.2pixel.cn/docs')}>
                 <Icons.HelpCircle className="h-3.5 w-3.5" />
                 Help & Documentation
                 <Icons.ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
@@ -317,7 +324,7 @@ export function AppMenu({
           {/* Quit */}
           <StyledDropdownMenuItem onClick={() => window.electronAPI.menuQuit()}>
             <Icons.LogOut className="h-3.5 w-3.5" />
-            Quit Craft Agents
+            Quit TwoPixel
             {quitHotkey && <DropdownMenuShortcut className="pl-6">{quitHotkey}</DropdownMenuShortcut>}
           </StyledDropdownMenuItem>
         </StyledDropdownMenuContent>

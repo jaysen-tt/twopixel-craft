@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Command as CommandPrimitive } from 'cmdk'
 import { Archive, ArchiveRestore } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -26,12 +27,13 @@ const MENU_ITEM_STYLE = 'flex cursor-pointer select-none items-center gap-3 roun
 // ============================================================================
 
 function StateItemContent({ state }: { state: SessionStatus }) {
+  const { t } = useTranslation()
   return (
     <>
       <span className="shrink-0 flex items-center" style={getStatusIconStyle(state)}>
         {state.icon}
       </span>
-      <div className="flex-1 min-w-0">{state.label}</div>
+      <div className="flex-1 min-w-0">{t(`status.${state.id}`, state.label)}</div>
     </>
   )
 }
@@ -62,6 +64,7 @@ export function SessionStatusMenu({
   onUnarchive,
   className,
 }: SessionStatusMenuProps) {
+  const { t } = useTranslation()
   const [filter, setFilter] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -96,10 +99,11 @@ export function SessionStatusMenu({
         </CommandPrimitive.Empty>
         {states.map((state) => {
           const isActive = activeState === state.id
+          const translatedLabel = t(`status.${state.id}`, state.label)
           return (
             <CommandPrimitive.Item
               key={state.id}
-              value={state.label}
+              value={translatedLabel}
               onSelect={() => onSelect(state.id)}
               className={cn(
                 MENU_ITEM_STYLE,
@@ -127,7 +131,7 @@ export function SessionStatusMenu({
               <span className="shrink-0 flex items-center opacity-60">
                 {isArchived ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
               </span>
-              <div className="flex-1 min-w-0">{isArchived ? 'Unarchive' : 'Archive'}</div>
+              <div className="flex-1 min-w-0">{isArchived ? t('sidebar.unarchive', '取消归档') : t('sidebar.archive', '归档会话')}</div>
             </CommandPrimitive.Item>
           </>
         )}

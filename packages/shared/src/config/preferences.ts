@@ -3,6 +3,7 @@ import { join } from 'path';
 import { ensureConfigDir } from './storage.ts';
 import { CONFIG_DIR } from './paths.ts';
 import { readJsonFileSync } from '../utils/files.ts';
+import { getRules, getFacts, getEpisodes } from './memory-store.ts';
 
 export interface UserLocation {
   city?: string;
@@ -53,11 +54,23 @@ export function savePreferences(prefs: UserPreferences): void {
   writeFileSync(PREFERENCES_FILE, JSON.stringify(prefs, null, 2), 'utf-8');
 }
 
-export function updatePreferences(updates: Partial<UserPreferences>): UserPreferences {
+export function updatePreferences(updates: Partial<UserPreferences> & { _appendNotes?: boolean }): UserPreferences {
   const current = loadPreferences();
+  
+  let newNotes = updates.notes;
+  if (updates._appendNotes && current.notes && updates.notes) {
+    // If it's a completely new note that doesn't exist yet, append it.
+    if (!current.notes.includes(updates.notes)) {
+      newNotes = `${current.notes}\n- ${updates.notes}`;
+    } else {
+      newNotes = current.notes;
+    }
+  }
+
   const updated = {
     ...current,
     ...updates,
+    notes: newNotes !== undefined ? newNotes : current.notes,
     // Merge location if provided
     location: updates.location
       ? { ...current.location, ...updates.location }
@@ -80,16 +93,24 @@ export function getPreferencesPath(): string {
  */
 export function formatPreferencesForPrompt(): string {
   const prefs = loadPreferences();
+  const rules = getRules();
+  const facts = getFacts();
+  const episodes = getEpisodes().slice(-5); // Get last 5 episodes
 
-  if (Object.keys(prefs).length === 0 ||
+  if (Object.keys(prefs).length === 0 && rules.length === 0 && facts.length === 0 && episodes.length === 0 &&
       (!prefs.name && !prefs.timezone && !prefs.location && !prefs.language && !prefs.notes)) {
     return '';
   }
 
-  const lines: string[] = ['## User Preferences - User has explicitly set these preferences, so adhere to them', ''];
+  const lines: string[] = [
+    '## User Profile & Long-Term Memory',
+    'You have a persistent memory of this user across sessions. You MUST implicitly demonstrate that you remember them by naturally weaving their name, context, and preferences into your daily conversations.',
+    'Do not be overly robotic about it, but act like a familiar, long-term pair programming partner. Always adhere strictly to their recorded preferences and rules.',
+    ''
+  ];
 
   if (prefs.name) {
-    lines.push(`- Name: ${prefs.name}`);
+    lines.push(`- User's Name: ${prefs.name} (Feel free to address the user by their name naturally)`);
   }
 
   if (prefs.timezone) {
@@ -109,7 +130,22 @@ export function formatPreferencesForPrompt(): string {
   }
 
   if (prefs.notes) {
-    lines.push('', '### Notes about this user', prefs.notes);
+    lines.push('', '### General Notes', prefs.notes);
+  }
+
+  if (facts.length > 0) {
+    lines.push('', '### Known Facts about User/Environment');
+    facts.forEach(f => lines.push(`- ${f.content}`));
+  }
+
+  if (rules.length > 0) {
+    lines.push('', '### Core Rules & Preferences');
+    rules.forEach(r => lines.push(`- ${r.content}`));
+  }
+
+  if (episodes.length > 0) {
+    lines.push('', '### Recent Session Summaries');
+    episodes.forEach(e => lines.push(`- ${new Date(e.createdAt).toLocaleString()}: ${e.summary}`));
   }
 
   lines.push('');

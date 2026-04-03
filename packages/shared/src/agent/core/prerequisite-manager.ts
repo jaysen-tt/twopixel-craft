@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * PrerequisiteManager - Prerequisite Reading System
  *
  * Blocks tool calls until specified files have been read in the current context window.
@@ -49,7 +56,7 @@ export interface PrerequisiteManagerConfig {
 const EXEMPT_SLUGS = new Set(['session', 'craft-agents-docs']);
 
 /** Global browser tools docs path required before browser tool usage. */
-const BROWSER_TOOLS_DOC_PATH = resolve(join(homedir(), '.craft-agent', 'docs', 'browser-tools.md'));
+const BROWSER_TOOLS_DOC_PATH = resolve(join(homedir(), '.twopixel', 'docs', 'browser-tools.md'));
 
 // ============================================================
 // Rules

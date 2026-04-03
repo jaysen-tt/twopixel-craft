@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Script to generate icons.ts with base64 encoded icons
  * Run with: npx tsx apps/electron/src/renderer/playground/registry/generate-icons.ts
  */
@@ -10,10 +17,10 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const TOOL_ICONS_DIR = path.join(process.env.HOME!, '.craft-agent/tool-icons')
+const TOOL_ICONS_DIR = path.join(process.env.HOME!, '.twopixel/tool-icons')
 const SOURCES_DIR = path.join(
   process.env.HOME!,
-  '.craft-agent/workspaces/046a02d0-6521-98eb-8756-95ec4bb8c41f/sources'
+  '.twopixel/workspaces/046a02d0-6521-98eb-8756-95ec4bb8c41f/sources'
 )
 const OUTPUT_FILE = path.join(__dirname, 'sample-icons.ts')
 
@@ -113,7 +120,7 @@ function generateIconsFile() {
  * DO NOT EDIT MANUALLY
  */
 
-// Native tool icons (from ~/.craft-agent/tool-icons/)
+// Native tool icons (from ~/.twopixel/tool-icons/)
 export const nativeToolIcons = {
 ${Object.entries(nativeIcons)
   .map(([name, data]) => `  ${name}: '${data}',`)

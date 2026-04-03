@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { describe, it, expect } from 'bun:test'
 import {
   parseTestConnectionError,
@@ -6,6 +13,7 @@ import {
   validateSetupTestInput,
   BUILT_IN_CONNECTION_TEMPLATES,
 } from '@craft-agent/server-core/domain'
+import { isValidProviderAuthCombination } from '@craft-agent/shared/config'
 import type { ModelDefinition } from '@craft-agent/shared/config/models'
 
 // ============================================================
@@ -111,6 +119,15 @@ describe('createBuiltInConnection', () => {
     const conn = createBuiltInConnection('pi-api-key-3')
     expect(conn.slug).toBe('pi-api-key-3')
     expect(conn.name).toContain('3')
+  })
+
+  it('creates twopixel-built-in with a valid compat auth configuration', () => {
+    const conn = createBuiltInConnection('twopixel-built-in')
+    expect(conn.providerType).toBe('pi_compat')
+    expect(conn.authType).toBe('api_key_with_endpoint')
+    expect(conn.piAuthProvider).toBe('openai')
+    expect(conn.customEndpoint).toEqual({ api: 'openai-completions' })
+    expect(isValidProviderAuthCombination(conn.providerType, conn.authType)).toBe(true)
   })
 
   it('throws for unknown slug', () => {

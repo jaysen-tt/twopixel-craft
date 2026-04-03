@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { describe, expect, it } from 'bun:test'
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
@@ -65,7 +72,7 @@ function runMigration(configDir: string) {
   ], {
     env: {
       ...process.env,
-      CRAFT_CONFIG_DIR: configDir,
+      TWOPIXEL_CONFIG_DIR: configDir,
     },
     stdout: 'pipe',
     stderr: 'pipe',
@@ -81,6 +88,11 @@ function runMigration(configDir: string) {
 function readPiApiKeyConnection(configPath: string): any {
   const migrated = JSON.parse(readFileSync(configPath, 'utf-8'))
   return migrated.llmConnections.find((c: any) => c.slug === 'pi-api-key')
+}
+
+function readConnection(configPath: string, slug: string): any {
+  const migrated = JSON.parse(readFileSync(configPath, 'utf-8'))
+  return migrated.llmConnections.find((c: any) => c.slug === slug)
 }
 
 function getModelIds(connection: any): string[] {
@@ -110,6 +122,33 @@ describe('startup migration (integration)', () => {
     expect(connection).toBeDefined()
     expect(connection.piAuthProvider).toBe('openai')
     expect(connection.authType).toBe('api_key')
+  })
+
+  it('repairs legacy twopixel-built-in auth and provider metadata on startup migration', () => {
+    const { configDir, workspaceRoot, configPath } = setupWorkspaceConfigDir()
+
+    writeRootConfig(configPath, workspaceRoot, [
+      {
+        slug: 'twopixel-built-in',
+        name: 'TwoPixel AI',
+        providerType: 'pi_compat',
+        authType: 'api_key',
+        baseUrl: 'http://43.160.252.207:16686/v1',
+        customEndpoint: { api: 'openai-completions' },
+        createdAt: Date.now(),
+        models: ['deepseek-chat', 'deepseek-reasoner'],
+        defaultModel: 'deepseek-chat',
+      },
+    ])
+
+    runMigration(configDir)
+
+    const connection = readConnection(configPath, 'twopixel-built-in')
+    expect(connection).toBeDefined()
+    expect(connection.providerType).toBe('pi_compat')
+    expect(connection.authType).toBe('api_key_with_endpoint')
+    expect(connection.piAuthProvider).toBe('openai')
+    expect(connection.customEndpoint).toEqual({ api: 'openai-completions' })
   })
 
   it('preserves userDefined3Tier model subsets during startup migration', () => {

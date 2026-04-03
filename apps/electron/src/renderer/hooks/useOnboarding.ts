@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * useOnboarding Hook
  *
  * Manages the state machine for the onboarding wizard.
@@ -18,6 +25,7 @@ import type {
 import type { ProviderChoice } from '@/components/onboarding/ProviderSelectStep'
 import type { LocalModelSubmitData } from '@/components/onboarding/LocalModelStep'
 import type { ApiKeySubmitData } from '@/components/apisetup'
+import type { TwoPixelAuthResult } from '@/lib/twopixel-auth'
 import type { CustomEndpointConfig } from '@config/llm-connections'
 import type { SetupNeeds, LlmConnectionSetup } from '../../shared/types'
 
@@ -87,7 +95,13 @@ interface UseOnboardingReturn {
   jumpToCredentials: (method: ApiSetupMethod) => void
 
   // Reset
-  reset: () => void
+  reset: (stepOverride?: OnboardingStep) => void
+
+  // TwoPixel Auth
+  handleLoginSuccess: (result: TwoPixelAuthResult) => void
+  handleRegisterSuccess: (result: TwoPixelAuthResult) => void
+  handleSwitchToLogin: () => void
+  handleSwitchToRegister: () => void
 }
 
 // Base slug for each setup method (used as template key in ipc.ts)
@@ -323,6 +337,11 @@ export function useOnboarding({
         }
         break
 
+      case 'login':
+      case 'register':
+        // Handled by LoginStep and RegisterStep components
+        break
+
       case 'git-bash':
         setState(s => ({ ...s, step: 'provider-select' }))
         break
@@ -348,6 +367,14 @@ export function useOnboarding({
       return
     }
     switch (state.step) {
+      case 'login':
+        if (onDismiss) {
+          onDismiss()
+        }
+        break
+      case 'register':
+        setState(s => ({ ...s, step: 'login' }))
+        break
       case 'git-bash':
         if (onDismiss) {
           onDismiss()
@@ -788,10 +815,70 @@ export function useOnboarding({
     onComplete()
   }, [onComplete])
 
+  // Handle successful login
+  const handleLoginSuccess = useCallback(async (result: TwoPixelAuthResult) => {
+    if (result.success && result.token) {
+      setState(s => ({
+        ...s,
+        loginStatus: 'success',
+        isExistingUser: true,
+      }))
+      
+      // Auto-setup TwoPixel built-in LLM connection with user's token
+      try {
+        await window.electronAPI.setupLlmConnection({
+          slug: 'twopixel-built-in',
+          credential: result.token,
+        })
+        console.log('[Onboarding] TwoPixel LLM connection configured')
+      } catch (error) {
+        console.error('[Onboarding] Failed to setup TwoPixel LLM connection:', error)
+      }
+      
+      // Skip onboarding - go directly to main app
+      onComplete()
+    }
+  }, [onComplete])
+
+  // Handle successful registration
+  const handleRegisterSuccess = useCallback(async (result: TwoPixelAuthResult) => {
+    if (result.success && result.token) {
+      setState(s => ({
+        ...s,
+        loginStatus: 'success',
+        isExistingUser: false,
+      }))
+      
+      // Auto-setup TwoPixel built-in LLM connection with user's token
+      try {
+        await window.electronAPI.setupLlmConnection({
+          slug: 'twopixel-built-in',
+          credential: result.token,
+        })
+        console.log('[Onboarding] TwoPixel LLM connection configured')
+      } catch (error) {
+        console.error('[Onboarding] Failed to setup TwoPixel LLM connection:', error)
+      }
+      
+      // Skip onboarding - go directly to main app
+      onComplete()
+    }
+  }, [onComplete])
+
+  // Switch to login step
+  const handleSwitchToLogin = useCallback(() => {
+    setState(s => ({ ...s, step: 'login', errorMessage: undefined }))
+  }, [])
+
+  // Switch to register step
+  const handleSwitchToRegister = useCallback(() => {
+    setState(s => ({ ...s, step: 'register', errorMessage: undefined }))
+  }, [])
+
   // Cancel onboarding
   const handleCancel = useCallback(() => {
-    setState(s => ({ ...s, step: 'welcome' }))
-  }, [])
+    setState(s => ({ ...s, step: initialStep, errorMessage: undefined }))
+  }, [initialStep])
 
   // Jump directly to credentials step with a pre-set method (for editing existing connections)
   const jumpToCredentials = useCallback((method: ApiSetupMethod) => {
@@ -805,9 +892,9 @@ export function useOnboarding({
   }, [])
 
   // Reset onboarding to initial state (used after logout or modal close)
-  const reset = useCallback(() => {
+  const reset = useCallback((stepOverride?: OnboardingStep) => {
     setState({
-      step: initialStep,
+      step: stepOverride ?? initialStep,
       loginStatus: 'idle',
       credentialStatus: 'idle',
       completionStatus: 'saving',
@@ -847,5 +934,10 @@ export function useOnboarding({
     handleCancel,
     jumpToCredentials,
     reset,
+    // TwoPixel Auth
+    handleLoginSuccess,
+    handleRegisterSuccess,
+    handleSwitchToLogin,
+    handleSwitchToRegister,
   }
 }

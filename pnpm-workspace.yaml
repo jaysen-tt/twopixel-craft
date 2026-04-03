@@ -1,0 +1,12 @@
+packages:
+  - packages/*
+  - apps/*
+  - '!apps/online-docs'
+
+onlyBuiltDependencies:
+  - '@sentry/cli'
+  - electron
+  - electron-winstaller
+  - esbuild
+  - koffi
+  - protobufjs

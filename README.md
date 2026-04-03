@@ -75,8 +75,8 @@ irm https://agents.craft.do/install-app.ps1 | iex
 ### Build from Source
 
 ```bash
-git clone https://github.com/lukilabs/craft-agents-oss.git
-cd craft-agents-oss
+git clone https://github.com/lukilabs/twopixels-oss.git
+cd twopixels-oss
 bun install
 bun run electron:start
 ```
@@ -223,8 +223,8 @@ docker run -d \
   -p 9100:9100 \
   -e CRAFT_SERVER_TOKEN=<token> \
   -e CRAFT_RPC_HOST=0.0.0.0 \
-  -v craft-data:/root/.craft-agent \
-  craft-agents-server
+  -v craft-data:/root/.twopixel \
+  twopixels-server
 ```
 
 To enable TLS in Docker, mount your certificates and set the env vars:
@@ -237,8 +237,8 @@ docker run -d \
   -e CRAFT_RPC_TLS_CERT=/certs/cert.pem \
   -e CRAFT_RPC_TLS_KEY=/certs/key.pem \
   -v ./certs:/certs:ro \
-  -v craft-data:/root/.craft-agent \
-  craft-agents-server
+  -v craft-data:/root/.twopixel \
+  twopixels-server
 ```
 
 ## CLI Client
@@ -343,7 +343,7 @@ craft-cli --validate-server --url ws://127.0.0.1:9100 --token <token>
 ## Architecture
 
 ```
-craft-agent/
+twopixel/
 ├── apps/
 │   ├── cli/                   # Terminal client (CLI)
 │   └── electron/              # Desktop GUI (primary)
@@ -376,7 +376,7 @@ bun run electron:start
 # Type checking
 bun run typecheck:all
 
-# Debug logging (writes to ~/Library/Logs/@craft-agent/electron/)
+# Debug logging (writes to ~/Library/Logs/@twopixel/electron/)
 # Logs are automatically enabled in development
 ```
 
@@ -485,10 +485,10 @@ Craft Agents uses two agent backends:
 
 ## Configuration
 
-Configuration is stored at `~/.craft-agent/`:
+Configuration is stored at `~/.twopixel/`:
 
 ```
-~/.craft-agent/
+~/.twopixel/
 ├── config.json              # Main config (workspaces, LLM connections)
 ├── credentials.enc          # Encrypted credentials (AES-256-GCM)
 ├── preferences.json         # User preferences
@@ -514,7 +514,7 @@ Automations let you automate workflows by triggering actions when events happen 
 - "Track permission mode changes and summarise them"
 - "Every Friday at 5pm, summarise this week's completed tasks"
 
-Or configure manually in `~/.craft-agent/workspaces/{id}/automations.json`:
+Or configure manually in `~/.twopixel/workspaces/{id}/automations.json`:
 
 ```json
 {
@@ -591,18 +591,18 @@ To launch the packaged app with verbose logging enabled, use `-- --debug` (note 
 
 **Windows (PowerShell):**
 ```powershell
-& "$env:LOCALAPPDATA\Programs\@craft-agentelectron\Craft Agents.exe" -- --debug
+& "$env:LOCALAPPDATA\Programs\@twopixelelectron\Craft Agents.exe" -- --debug
 ```
 
 **Linux:**
 ```bash
-./craft-agents -- --debug
+./twopixels -- --debug
 ```
 
 Logs are written to:
-- **macOS:** `~/Library/Logs/@craft-agent/electron/main.log`
-- **Windows:** `%APPDATA%\@craft-agent\electron\logs\main.log`
-- **Linux:** `~/.config/@craft-agent/electron/logs/main.log`
+- **macOS:** `~/Library/Logs/@twopixel/electron/main.log`
+- **Windows:** `%APPDATA%\@twopixel\electron\logs\main.log`
+- **Linux:** `~/.config/@twopixel/electron/logs/main.log`
 
 ## License
 

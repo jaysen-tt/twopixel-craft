@@ -1,12 +1,13 @@
 /**
- * ChatPage
- *
- * Displays a single session's chat with a consistent PanelHeader.
- * Extracted from MainContentPanel for consistency with other pages.
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
  */
 
 import * as React from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle, Globe, Copy, RefreshCw, Link2Off, Info } from 'lucide-react'
 import { ChatDisplay, type ChatDisplayHandle } from '@/components/app-shell/ChatDisplay'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
@@ -29,7 +30,7 @@ export interface ChatPageProps {
 }
 
 const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
-  // Diagnostic: mark when component runs
+  const { t } = useTranslation()
   React.useLayoutEffect(() => {
     rendererPerf.markSessionSwitch(sessionId, 'panel.mounted')
   }, [sessionId])
@@ -458,7 +459,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
               <span className="flex-1">Stop Sharing</span>
             </StyledDropdownMenuItem>
             <StyledDropdownMenuSeparator />
-            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs/go-further/sharing')}>
+            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.2pixel.cn/docs/go-further/sharing')}>
               <Info className="h-3.5 w-3.5" />
               <span className="flex-1">Learn More</span>
             </StyledDropdownMenuItem>
@@ -472,7 +473,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
               <span className="flex-1">Share Online</span>
             </StyledDropdownMenuItem>
             <StyledDropdownMenuSeparator />
-            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs/go-further/sharing')}>
+            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.2pixel.cn/docs/go-further/sharing')}>
               <Info className="h-3.5 w-3.5" />
               <span className="flex-1">Learn More</span>
             </StyledDropdownMenuItem>
@@ -577,7 +578,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
           <RenameDialog
             open={renameDialogOpen}
             onOpenChange={setRenameDialogOpen}
-            title="Rename Session"
+            title={t('chatPage.renameSession')}
             value={renameName}
             onValueChange={setRenameName}
             onSubmit={handleRenameSubmit}
@@ -590,7 +591,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     // Session truly doesn't exist
     return (
       <div className="h-full flex flex-col">
-        <PanelHeader  title="Session" leadingAction={leadingAction} rightSidebarButton={rightSidebarButton} />
+        <PanelHeader  title={t('chatPage.session')} leadingAction={leadingAction} rightSidebarButton={rightSidebarButton} />
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground">
           <AlertCircle className="h-10 w-10" />
           <p className="text-sm">This session no longer exists</p>
@@ -650,7 +651,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
       <RenameDialog
         open={renameDialogOpen}
         onOpenChange={setRenameDialogOpen}
-        title="Rename Session"
+        title={t('chatPage.renameSession')}
         value={renameName}
         onValueChange={setRenameName}
         onSubmit={handleRenameSubmit}

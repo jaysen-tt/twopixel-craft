@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * PathProcessor - Path Expansion and Normalization
  *
  * Provides path utilities that both ClaudeAgent and CodexAgent can use.
@@ -31,10 +38,10 @@ export { expandPath, normalizePath, pathStartsWith, toPortablePath };
  */
 const CONFIG_FILE_PATTERNS = [
   // Craft Agent configs
-  /\.craft-agent\/.*\/(config|permissions|theme|guide|labels|statuses)\.json$/,
-  /\.craft-agent\/config\.json$/,
-  /\.craft-agent\/preferences\.json$/,
-  /\.craft-agent\/.*\/SKILL\.md$/,
+  /\.twopixel\/.*\/(config|permissions|theme|guide|labels|statuses)\.json$/,
+  /\.twopixel\/config\.json$/,
+  /\.twopixel\/preferences\.json$/,
+  /\.twopixel\/.*\/SKILL\.md$/,
   // Common config files
   /package\.json$/,
   /tsconfig\.json$/,

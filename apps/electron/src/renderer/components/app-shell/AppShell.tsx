@@ -1,6 +1,14 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import * as React from "react"
 import { useRef, useState, useEffect, useCallback, useMemo } from "react"
 import { useAtomValue, useStore } from "jotai"
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from "motion/react"
 import {
   Archive,
@@ -30,6 +38,7 @@ import {
   Radio,
   Bot,
   Info,
+  LogOut,
 } from "lucide-react"
 // SessionStatusIcons no longer used - icons come from dynamic sessionStatuses
 import { SourceAvatar } from "@/components/ui/source-avatar"
@@ -72,8 +81,9 @@ import { MainContentPanel } from "./MainContentPanel"
 import { PanelStackContainer } from "./PanelStackContainer"
 import type { ChatDisplayHandle } from "./ChatDisplay"
 import { LeftSidebar } from "./LeftSidebar"
+import { TwoPixelAccountPanel } from "./TwoPixelAccountPanel"
 import { useSession } from "@/hooks/useSession"
-import { ensureSessionMessagesLoadedAtom } from "@/atoms/sessions"
+import { ensureSessionMessagesLoadedAtom, initializeSessionsAtom } from "@/atoms/sessions"
 import { AppShellProvider, type AppShellContextType } from "@/context/AppShellContext"
 import { EscapeInterruptProvider, useEscapeInterrupt } from "@/context/EscapeInterruptContext"
 import { useTheme } from "@/context/ThemeContext"
@@ -494,9 +504,7 @@ function AppShellContent({
   menuNewChatTrigger,
   isFocusedMode = false,
 }: AppShellProps) {
-  // Destructure commonly used values from context
-  // Note: sessions is NOT destructured here - we use sessionMetaMapAtom instead
-  // to prevent closures from retaining the full messages array
+  const { t } = useTranslation()
   const {
     workspaces,
     activeWorkspaceId,
@@ -519,6 +527,7 @@ function AppShellContent({
     onSendMessage,
     openNewChat,
     pendingPermissions,
+    onLogout,
   } = contextValue
 
   // Get hotkey labels from centralized action registry
@@ -1269,6 +1278,7 @@ function AppShellContent({
   // This prevents closures from retaining full message arrays
   const sessionMetaMap = useAtomValue(sessionMetaMapAtom)
   const setSessionMetaMap = useSetAtom(sessionMetaMapAtom)
+  const initializeSessions = useSetAtom(initializeSessionsAtom)
 
   const hasPendingPrompt = React.useCallback((sessionId: string) => {
     return (pendingPermissions.get(sessionId)?.length ?? 0) > 0
@@ -1719,6 +1729,11 @@ function AppShellContent({
     }
   }, [])
 
+  // Handler for logout
+  const handleLogout = useCallback(async () => {
+    onLogout()
+  }, [onLogout])
+
   // ============================================================================
   // EDIT POPOVER STATE
   // ============================================================================
@@ -2083,21 +2098,21 @@ function AppShellContent({
     if (isSettingsNavigation(navState)) return 'Settings'
 
     // Sessions navigator - use sessionFilter
-    if (!sessionFilter) return 'All Sessions'
+    if (!sessionFilter) return t('sidebar.allSessions', '所有会话 (All Sessions)')
 
     switch (sessionFilter.kind) {
       case 'flagged':
-        return 'Flagged'
+        return t('sidebar.flagged', '已标记 (Flagged)')
       case 'state': {
         const state = effectiveSessionStatuses.find(s => s.id === sessionFilter.stateId)
-        return state?.label || 'All Sessions'
+        return state ? t(`status.${state.id}`, state.label) : t('sidebar.allSessions', '所有会话 (All Sessions)')
       }
       case 'label':
-        return sessionFilter.labelId === '__all__' ? 'Labels' : getLabelDisplayName(labelConfigs, sessionFilter.labelId)
+        return sessionFilter.labelId === '__all__' ? t('sidebar.labels', '标签 (Labels)') : getLabelDisplayName(labelConfigs, sessionFilter.labelId)
       case 'view':
-        return sessionFilter.viewId === '__all__' ? 'Views' : viewConfigs.find(v => v.id === sessionFilter.viewId)?.name || 'Views'
+        return sessionFilter.viewId === '__all__' ? t('sidebar.views', '视图 (Views)') : viewConfigs.find(v => v.id === sessionFilter.viewId)?.name || t('sidebar.views', '视图 (Views)')
       default:
-        return 'All Sessions'
+        return t('sidebar.allSessions', '所有会话 (All Sessions)')
     }
   }, [navState, sessionFilter, effectiveSessionStatuses, labelConfigs, viewConfigs, automationFilter])
 
@@ -2159,6 +2174,7 @@ function AppShellContent({
 
   return (
     <AppShellProvider value={appShellContextValue}>
+      <div className="h-full" style={{ height: '100%' }}>
         {/* === TOP BAR === */}
         <TopBar
           workspaces={workspaces}
@@ -2188,8 +2204,8 @@ function AppShellContent({
       {/* === OUTER LAYOUT: Unified Panel Stack | Right Sidebar === */}
       <div
         ref={shellRef}
-        className="flex items-stretch relative"
-        style={{ height: '100%', paddingRight: PANEL_EDGE_INSET, paddingBottom: PANEL_EDGE_INSET, paddingLeft: 0, gap: PANEL_GAP }}
+        className="relative flex h-full items-stretch"
+        style={{ paddingRight: PANEL_EDGE_INSET, paddingBottom: PANEL_EDGE_INSET, paddingLeft: 0, gap: PANEL_GAP }}
       >
         <PanelStackContainer
           sidebarSlot={
@@ -2218,7 +2234,7 @@ function AppShellContent({
                               data-tutorial="new-chat-button"
                             >
                               <SquarePenRounded className="h-3.5 w-3.5 shrink-0" />
-                              New Session
+                              {t('chatPage.newChat')}
                             </Button>
                           </ContextMenuTrigger>
                           <StyledContextMenuContent>
@@ -2240,11 +2256,9 @@ function AppShellContent({
                   getItemProps={getSidebarItemProps}
                   focusedItemId={focusedSidebarItemId}
                   links={[
-                    // --- Sessions Section ---
-                    // All Sessions: expandable with status children (sortable) + Flagged & Archived as trailing items
                     {
                       id: "nav:allSessions",
-                      title: "All Sessions",
+                      title: t('sidebar.allSessions'),
                       label: String(workspaceSessionMetas.length),
                       icon: Inbox,
                       variant: sessionFilter?.kind === 'allSessions' ? "default" : "ghost",
@@ -2257,7 +2271,6 @@ function AppShellContent({
                         onConfigureStatuses: openConfigureStatuses,
                         onMarkAllRead: () => {
                           if (!activeWorkspaceId) return
-                          // Optimistic: clear hasUnread on all workspace session metas
                           setSessionMetaMap(prev => {
                             const next = new Map(prev)
                             for (const [id, meta] of next) {
@@ -2270,13 +2283,11 @@ function AppShellContent({
                           window.electronAPI.markAllSessionsRead(activeWorkspaceId)
                         },
                       },
-                      // Enable flat DnD reorder for status items
                       sortable: { onReorder: handleStatusReorder },
                       items: [
-                        // Status items (sortable via SortableStatusList)
                         ...effectiveSessionStatuses.map(state => ({
                           id: `nav:state:${state.id}`,
-                          title: state.label,
+                          title: t(`status.${state.id}`, state.label),
                           label: String(sessionStatusCounts[state.id] || 0),
                           icon: state.icon,
                           iconColor: state.resolvedColor,
@@ -2289,21 +2300,18 @@ function AppShellContent({
                             onConfigureStatuses: openConfigureStatuses,
                           },
                         })),
-                        // Separator: SortableStatusList splits here — items after become non-sortable trailingItems
                         { id: 'separator:states-flagged', type: 'separator' as const },
-                        // Flagged (trailing, non-sortable)
                         {
                           id: "nav:flagged",
-                          title: "Flagged",
+                          title: t('sidebar.flagged'),
                           label: String(flaggedCount),
                           icon: <Flag className="h-3.5 w-3.5" />,
                           variant: (sessionFilter?.kind === 'flagged' ? "default" : "ghost") as "default" | "ghost",
                           onClick: handleFlaggedClick,
                         },
-                        // Archived (trailing, non-sortable)
                         {
                           id: "nav:archived",
-                          title: "Archived",
+                          title: t('sidebar.archived'),
                           label: archivedCount > 0 ? String(archivedCount) : undefined,
                           icon: Archive,
                           variant: (sessionFilter?.kind === 'archived' ? "default" : "ghost") as "default" | "ghost",
@@ -2311,14 +2319,11 @@ function AppShellContent({
                         },
                       ],
                     },
-                    // Labels: navigable header (shows all labeled sessions) + hierarchical tree (drag-and-drop reorder + re-parent)
                     {
                       id: "nav:labels",
-                      title: "Labels",
+                      title: t('sidebar.labels'),
                       icon: Tag,
-                      // Only highlighted when "Labels" itself is selected (not sub-labels)
                       variant: (sessionFilter?.kind === 'label' && sessionFilter.labelId === '__all__') ? "default" as const : "ghost" as const,
-                      // Clicking navigates to "all labeled sessions" view
                       onClick: () => handleLabelClick('__all__'),
                       expandable: true,
                       expanded: isExpanded('nav:labels'),
@@ -2330,12 +2335,10 @@ function AppShellContent({
                       },
                       items: buildLabelSidebarItems(labelTree),
                     },
-                    // --- Separator ---
                     { id: "separator:chats-sources", type: "separator" },
-                    // --- Sources & Skills Section ---
                     {
                       id: "nav:sources",
-                      title: "Sources",
+                      title: t('sidebar.sources'),
                       label: String(sources.length),
                       icon: DatabaseZap,
                       variant: (isSourcesNavigation(navState) && !sourceFilter) ? "default" : "ghost",
@@ -2377,7 +2380,7 @@ function AppShellContent({
                         },
                         {
                           id: "nav:sources:local",
-                          title: "Local Folders",
+                          title: t('sidebar.localFolders'),
                           label: String(sourceTypeCounts.local),
                           icon: FolderOpen,
                           variant: (sourceFilter?.kind === 'type' && sourceFilter.sourceType === 'local') ? "default" : "ghost",
@@ -2392,7 +2395,7 @@ function AppShellContent({
                     },
                     {
                       id: "nav:skills",
-                      title: "Skills",
+                      title: t('sidebar.skills'),
                       label: String(skills.length),
                       icon: Zap,
                       variant: isSkillsNavigation(navState) ? "default" : "ghost",
@@ -2404,7 +2407,7 @@ function AppShellContent({
                     },
                     {
                       id: "nav:automations",
-                      title: "Automations",
+                      title: t('sidebar.automations'),
                       label: String(automations.length),
                       icon: ListTodo,
                       variant: (isAutomationsNavigation(navState) && !automationFilter) ? "default" : "ghost",
@@ -2419,7 +2422,7 @@ function AppShellContent({
                       items: [
                         {
                           id: "nav:automations:scheduled",
-                          title: "Scheduled",
+                          title: t('sidebar.scheduled'),
                           label: String(automationTypeCounts.scheduled),
                           icon: Clock,
                           variant: (automationFilter?.kind === 'type' && automationFilter.automationType === 'scheduled') ? "default" : "ghost",
@@ -2437,7 +2440,7 @@ function AppShellContent({
                         },
                         {
                           id: "nav:automations:agentic",
-                          title: "Agentic",
+                          title: t('sidebar.agentic'),
                           label: String(automationTypeCounts.agentic),
                           icon: Bot,
                           variant: (automationFilter?.kind === 'type' && automationFilter.automationType === 'agentic') ? "default" : "ghost",
@@ -2446,20 +2449,17 @@ function AppShellContent({
                         },
                       ],
                     },
-                    // --- Separator ---
                     { id: "separator:skills-settings", type: "separator" },
-                    // --- Settings ---
                     {
                       id: "nav:settings",
-                      title: "Settings",
+                      title: t('sidebar.settings'),
                       icon: Settings,
                       variant: isSettingsNavigation(navState) ? "default" : "ghost",
                       onClick: () => handleSettingsClick('app'),
                     },
-                    // --- What's New ---
                     {
                       id: "nav:whats-new",
-                      title: "What's New",
+                      title: "功能介绍",
                       icon: hasUnseenReleaseNotes ? (
                         <span className="relative">
                           <Cake className="h-3.5 w-3.5" />
@@ -2473,6 +2473,17 @@ function AppShellContent({
                 />
                 {/* Agent Tree: Hierarchical list of agents */}
                 {/* Agents section removed */}
+                </div>
+                {/* Logout button at bottom of sidebar */}
+                <div className="shrink-0 px-2 pt-2 border-t border-foreground/5">
+                  <TwoPixelAccountPanel />
+                  <button
+                    onClick={handleLogout}
+                    className="group mt-2 flex w-full items-center gap-2 rounded-[6px] text-[13px] select-none outline-none py-[5px] px-2 text-muted-foreground hover:bg-sidebar-hover hover:text-foreground transition-colors"
+                  >
+                    <LogOut className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1 text-left">{t('sidebar.logout')}</span>
+                  </button>
                 </div>
               </div>
 
@@ -2537,7 +2548,7 @@ function AppShellContent({
                       >
                         {/* Header with title and clear button (only clears user-added filters, never pinned) */}
                         <div className="flex items-center justify-between px-2 py-1.5">
-                          <span className="text-xs font-medium text-muted-foreground">Filter Chats</span>
+                          <span className="text-xs font-medium text-muted-foreground">{t('sidebar.filterChats', '筛选会话 (Filter Chats)')}</span>
                           {(listFilter.size > 0 || labelFilter.size > 0) && (
                             <button
                               onClick={(e) => {
@@ -2617,7 +2628,7 @@ function AppShellContent({
                                   }
                                 }
                               }}
-                              placeholder="Search statuses & labels..."
+                              placeholder={t('sidebar.searchStatusesLabels', '搜索状态和标签...')}
                               className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
                               autoFocus
                             />
@@ -2651,7 +2662,7 @@ function AppShellContent({
                                     <StyledDropdownMenuItem disabled key={`pinned-status-${state.id}`}>
                                       <FilterMenuRow
                                         icon={state.icon}
-                                        label={state.label}
+                                        label={t(`status.${state.id}`, state.label)}
                                         accessory={<Check className="h-3 w-3 text-muted-foreground" />}
                                         iconStyle={state.iconColorable ? { color: state.resolvedColor } : undefined}
                                         noIconContainer
@@ -2683,7 +2694,7 @@ function AppShellContent({
                                       <StyledDropdownMenuSubTrigger onClick={(e) => { e.preventDefault(); setListFilter(prev => { const next = new Map(prev); next.delete(state.id); return next }) }}>
                                         <FilterMenuRow
                                           icon={state.icon}
-                                          label={state.label}
+                                          label={t(`status.${state.id}`, state.label)}
                                           accessory={<FilterModeBadge mode={mode} />}
                                           iconStyle={applyColor ? { color: state.resolvedColor } : undefined}
                                           noIconContainer
@@ -2746,7 +2757,7 @@ function AppShellContent({
                             <DropdownMenuSub>
                               <StyledDropdownMenuSubTrigger>
                                 <Inbox className="h-3.5 w-3.5" />
-                                <span className="flex-1">Statuses</span>
+                                <span className="flex-1">{t('sidebar.statuses', '状态 (Statuses)')}</span>
                               </StyledDropdownMenuSubTrigger>
                               <StyledDropdownMenuSubContent minWidth="min-w-[180px]">
                                 {effectiveSessionStatuses.map(state => {
@@ -2761,7 +2772,7 @@ function AppShellContent({
                                         <StyledDropdownMenuSubTrigger onClick={(e) => { e.preventDefault(); setListFilter(prev => { const next = new Map(prev); next.delete(state.id); return next }) }}>
                                           <FilterMenuRow
                                             icon={state.icon}
-                                            label={state.label}
+                                            label={t(`status.${state.id}`, state.label)}
                                             accessory={<FilterModeBadge mode={currentMode} />}
                                             iconStyle={applyColor ? { color: state.resolvedColor } : undefined}
                                             noIconContainer
@@ -2803,7 +2814,7 @@ function AppShellContent({
                                       >
                                         <FilterMenuRow
                                           icon={state.icon}
-                                          label={state.label}
+                                          label={t(`status.${state.id}`, state.label)}
                                           accessory={isPinned ? <Check className="h-3 w-3 text-muted-foreground" /> : null}
                                           iconStyle={applyColor ? { color: state.resolvedColor } : undefined}
                                           noIconContainer
@@ -2845,7 +2856,7 @@ function AppShellContent({
                                 <DropdownMenuSub>
                                   <StyledDropdownMenuSubTrigger>
                                     <Layers className="h-3.5 w-3.5" />
-                                    <span className="flex-1">Group</span>
+                                    <span className="flex-1">{t('sidebar.group', '分组 (Group)')}</span>
                                   </StyledDropdownMenuSubTrigger>
                                   <StyledDropdownMenuSubContent minWidth="min-w-[140px]">
                                     <StyledDropdownMenuItem onClick={() => setChatGroupingMode('date')}>
@@ -2889,7 +2900,7 @@ function AppShellContent({
                                 {filterDropdownResults.states.length > 0 && (
                                   <>
                                     <div className="px-3 pt-1.5 pb-1 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                                      Statuses
+                                      {t('sidebar.statuses', '状态 (Statuses)')}
                                     </div>
                                     {filterDropdownResults.states.map((state, index) => {
                                       const applyColor = state.iconColorable
@@ -2909,7 +2920,7 @@ function AppShellContent({
                                             >
                                               <FilterMenuRow
                                                 icon={state.icon}
-                                                label={state.label}
+                                                label={t(`status.${state.id}`, state.label)}
                                                 accessory={<FilterModeBadge mode={currentMode} />}
                                                 iconStyle={applyColor ? { color: state.resolvedColor } : undefined}
                                                 noIconContainer
@@ -2958,7 +2969,7 @@ function AppShellContent({
                                           >
                                             <FilterMenuRow
                                               icon={state.icon}
-                                              label={state.label}
+                                              label={t(`status.${state.id}`, state.label)}
                                               accessory={isPinned ? <Check className="h-3 w-3 text-muted-foreground" /> : null}
                                               iconStyle={applyColor ? { color: state.resolvedColor } : undefined}
                                               noIconContainer
@@ -3070,7 +3081,7 @@ function AppShellContent({
                       trigger={
                         <HeaderIconButton
                           icon={<Plus className="h-4 w-4" />}
-                          tooltip="Add Source"
+                          tooltip={t('sidebar.addSource')}
                           data-tutorial="add-source-button"
                         />
                       }
@@ -3080,26 +3091,24 @@ function AppShellContent({
                       )}
                     />
                   )}
-                  {/* Add Skill button (only for skills mode) */}
                   {isSkillsNavigation(navState) && activeWorkspace && (
                     <EditPopover
                       trigger={
                         <HeaderIconButton
                           icon={<Plus className="h-4 w-4" />}
-                          tooltip="Add Skill"
+                          tooltip={t('sidebar.addSkill')}
                           data-tutorial="add-skill-button"
                         />
                       }
                       {...getEditConfig('add-skill', activeWorkspace.rootPath)}
                     />
                   )}
-                  {/* Add Automation button (only for automations mode) */}
                   {isAutomationsNavigation(navState) && activeWorkspace && (
                     <EditPopover
                       trigger={
                         <HeaderIconButton
                           icon={<Plus className="h-4 w-4" />}
-                          tooltip="Add Automation"
+                          tooltip={t('sidebar.addAutomation')}
                         />
                       }
                       {...getEditConfig('automation-config', activeWorkspace.rootPath)}
@@ -3286,6 +3295,7 @@ function AppShellContent({
         </div>
         )}
 
+      </div>
       </div>
 
       {/* ============================================================================

@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { unlink } from 'fs/promises'
 import { join } from 'path'
 import { homedir } from 'os'
@@ -9,6 +16,7 @@ import { requestClientConfirmDialog } from '@craft-agent/server-core/transport'
 
 export const HANDLED_CHANNELS = [
   RPC_CHANNELS.auth.LOGOUT,
+  RPC_CHANNELS.auth.RESET_APP,
   RPC_CHANNELS.auth.SHOW_LOGOUT_CONFIRMATION,
   RPC_CHANNELS.auth.SHOW_DELETE_SESSION_CONFIRMATION,
   RPC_CHANNELS.credentials.HEALTH_CHECK,
@@ -24,7 +32,7 @@ export function registerAuthHandlers(server: RpcServer, deps: HandlerDeps): void
       cancelId: 0,
       title: 'Log Out',
       message: 'Are you sure you want to log out?',
-      detail: 'All conversations will be deleted. This action cannot be undone.',
+      detail: 'You will be signed out on this device and need to log in again.',
     })
     // result.response is the index of the clicked button
     // 0 = Cancel, 1 = Log Out
@@ -47,26 +55,41 @@ export function registerAuthHandlers(server: RpcServer, deps: HandlerDeps): void
     return result.response === 1
   })
 
-  // Logout - clear all credentials and config
+  // Logout - clear only the built-in TwoPixel login credential
   server.handle(RPC_CHANNELS.auth.LOGOUT, async () => {
     try {
       const manager = getCredentialManager()
+      await Promise.all([
+        manager.delete({ type: 'llm_api_key', connectionSlug: 'twopixel-built-in' }),
+        manager.delete({ type: 'llm_oauth', connectionSlug: 'twopixel-built-in' }),
+        manager.delete({ type: 'llm_iam', connectionSlug: 'twopixel-built-in' }),
+        manager.delete({ type: 'llm_service_account', connectionSlug: 'twopixel-built-in' }),
+      ])
+      deps.platform.logger.info('Logout complete - cleared TwoPixel login credential only')
+    } catch (error) {
+      deps.platform.logger.error('Logout error:', error)
+      throw error
+    }
+  })
 
-      // List and delete all stored credentials
+  // Reset app - clear all local credentials and config
+  server.handle(RPC_CHANNELS.auth.RESET_APP, async () => {
+    try {
+      const manager = getCredentialManager()
+
       const allCredentials = await manager.list()
       for (const credId of allCredentials) {
         await manager.delete(credId)
       }
 
-      // Delete the config file
-      const configPath = join(homedir(), '.craft-agent', 'config.json')
+      const configPath = join(homedir(), '.twopixel', 'config.json')
       await unlink(configPath).catch(() => {
         // Ignore if file doesn't exist
       })
 
-      deps.platform.logger.info('Logout complete - cleared all credentials and config')
+      deps.platform.logger.info('Reset app complete - cleared all credentials and config')
     } catch (error) {
-      deps.platform.logger.error('Logout error:', error)
+      deps.platform.logger.error('Reset app error:', error)
       throw error
     }
   })

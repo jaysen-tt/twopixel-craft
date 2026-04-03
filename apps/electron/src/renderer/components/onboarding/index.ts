@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 // Shared primitives for building step components
 export {
   StepIcon,
@@ -18,6 +25,8 @@ export { CompletionStep } from './CompletionStep'
 export { LocalModelStep, type LocalModelSubmitData } from './LocalModelStep'
 export { ReauthScreen } from './ReauthScreen'
 export { GitBashWarning, type GitBashStatus } from './GitBashWarning'
+export { LoginStep } from './LoginStep'
+export { RegisterStep } from './RegisterStep'
 
 // Main wizard container
 export { OnboardingWizard, type OnboardingState, type OnboardingStep, type LoginStatus } from './OnboardingWizard'
@@ -35,3 +44,5 @@ export type {
 export type {
   CredentialStatus as CredentialStatusType,
 } from './CredentialsStep'
+
+export type { TwoPixelAuthResult, TwoPixelUser } from '@/lib/twopixel-auth'

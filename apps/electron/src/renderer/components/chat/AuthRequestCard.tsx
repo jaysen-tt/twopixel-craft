@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Key, User, Lock, Eye, EyeOff, CheckCircle2, XCircle, type LucideIcon } from 'lucide-react'
 import { Spinner } from '@craft-agent/ui'
 import { Button } from '@/components/ui/button'
@@ -163,6 +164,7 @@ interface AuthRequestCardProps {
  * - failed: Show error state
  */
 export function AuthRequestCard({ message, onRespondToCredential, sessionId, isInteractive = true }: AuthRequestCardProps) {
+  const { t } = useTranslation()
   const [value, setValue] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -334,9 +336,9 @@ export function AuthRequestCard({ message, onRespondToCredential, sessionId, isI
   if (!isInteractive && authStatus !== 'pending') {
     const StatusIcon = authStatus === 'completed' ? CheckCircle2 : XCircle
     const title =
-      authStatus === 'completed' ? `${authSourceName} Connected` :
-      authStatus === 'cancelled' ? `${authSourceName} Cancelled` :
-      `${authSourceName} Failed`
+      authStatus === 'completed' ? `${authSourceName} ${t('auth.status.approved')}` :
+      authStatus === 'cancelled' ? `${authSourceName} ${t('auth.status.denied')}` :
+      `${authSourceName} ${t('auth.status.expired')}`
     const subtitle =
       authStatus === 'completed' && authEmail ? `Signed in as ${authEmail}` :
       authStatus === 'failed' && authError ? authError :
@@ -368,45 +370,42 @@ export function AuthRequestCard({ message, onRespondToCredential, sessionId, isI
       return (
         <AuthCardHeader
           icon={CheckCircle2}
-          title={`${authSourceName} Connected`}
-          subtitle={authEmail ? `Signed in as ${authEmail}` : undefined}
+          title={`${authSourceName} ${t('auth.status.approved')}`}
+          subtitle={authEmail ? `${t('auth.request.credentials')}: ${authEmail}` : undefined}
           subtitleSecondary={authWorkspace ? `Workspace: ${authWorkspace}` : undefined}
         />
       )
     }
 
-    // Cancelled state
     if (authStatus === 'cancelled') {
       return (
         <AuthCardHeader
           icon={XCircle}
-          title={`${authSourceName} Cancelled`}
+          title={`${authSourceName} ${t('auth.status.denied')}`}
         />
       )
     }
 
-    // Failed state
     if (authStatus === 'failed') {
       return (
         <AuthCardHeader
           icon={XCircle}
-          title={`${authSourceName} Failed`}
+          title={`${authSourceName} ${t('auth.status.expired')}`}
           subtitle={authError || undefined}
         />
       )
     }
 
-    // OAuth authenticating state (waiting for browser)
     if (isOAuth && isSubmitting) {
       return (
         <div className="flex gap-3">
           <Spinner className="text-[10px] shrink-0 mt-1" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium leading-5">
-              {`${authSourceName} Authenticating...`}
+              {`${authSourceName} ${t('auth.request.validating')}...`}
             </div>
             <div className="text-xs mt-0.5 opacity-50">
-              Complete authentication in your browser
+              {t('auth.request.validating')}
             </div>
           </div>
         </div>
@@ -587,33 +586,32 @@ export function AuthRequestCard({ message, onRespondToCredential, sessionId, isI
       return (
         <AuthCardActions
           primary={{
-            label: `Sign in with ${authTypeLabel.replace(' Sign-In', '')}`,
+            label: `${t('auth.request.submit')} ${authTypeLabel.replace(' Sign-In', '')}`,
             onClick: handleOAuthClick,
             dataTutorial: 'oauth-sign-in-button',
           }}
           secondary={{
-            label: 'Cancel',
+            label: t('auth.request.cancel'),
             onClick: handleCancel,
           }}
         />
       )
     }
 
-    // Credential form - save button (uses type="submit" inside form)
     return (
       <AuthCardActions
         primary={{
-          label: isSubmitting ? 'Saving...' : 'Save',
+          label: isSubmitting ? `${t('auth.request.validating')}...` : t('common.save'),
           onClick: handleSubmit,
           disabled: !isValid || isSubmitting,
           loading: isSubmitting,
         }}
         secondary={{
-          label: 'Cancel',
+          label: t('auth.request.cancel'),
           onClick: handleCancel,
           disabled: isSubmitting,
         }}
-        hint="Credentials are encrypted at rest"
+        hint={t('auth.request.rememberCredentials')}
       />
     )
   }

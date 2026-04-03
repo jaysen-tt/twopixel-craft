@@ -1,10 +1,17 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * CLI Tool Icon Resolver
  *
  * Parses bash command strings to detect known CLI tools (git, npm, docker, etc.)
  * and resolves their display name + icon for turn card rendering.
  *
- * The mapping lives in ~/.craft-agent/tool-icons/tool-icons.json alongside the
+ * The mapping lives in ~/.twopixel/tool-icons/tool-icons.json alongside the
  * icon files, so users can customize tools and icons.
  *
  * Command parsing handles:
@@ -270,7 +277,7 @@ const TOOL_ICONS_JSON = 'tool-icons.json';
 /**
  * Loads tool icon config from a directory containing tool-icons.json.
  *
- * @param toolIconsDir - Path to the tool-icons directory (e.g. ~/.craft-agent/tool-icons/)
+ * @param toolIconsDir - Path to the tool-icons directory (e.g. ~/.twopixel/tool-icons/)
  * @returns Parsed config or null if missing/invalid
  */
 export function loadToolIconConfig(toolIconsDir: string): ToolIconConfig | null {
@@ -320,7 +327,7 @@ function buildCommandMap(config: ToolIconConfig): Map<string, ToolIconEntry> {
  * the tool-icons.json mapping. Returns the first tool that has a valid icon file.
  *
  * @param commandStr - Full bash command string, e.g. "git add . && npm publish"
- * @param toolIconsDir - Path to ~/.craft-agent/tool-icons/ containing tool-icons.json and icon files
+ * @param toolIconsDir - Path to ~/.twopixel/tool-icons/ containing tool-icons.json and icon files
  * @returns Match with displayName and base64 iconDataUrl, or undefined if no match
  */
 export function resolveToolIcon(

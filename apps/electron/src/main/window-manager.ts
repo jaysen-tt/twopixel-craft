@@ -486,9 +486,13 @@ export class WindowManager {
 
     const managed = this.windows.get(webContentsId)
     if (managed && !managed.window.isDestroyed()) {
-      // Remove close listener temporarily to avoid infinite loop,
-      // then destroy the window directly
-      managed.window.destroy()
+      if (this.isAppQuitting) {
+        managed.window.destroy()
+      } else {
+        // In background daemon mode, "close" just hides the window instead of destroying it
+        managed.window.hide()
+        windowLog.info(`Window hidden instead of destroyed (Background Service mode)`)
+      }
     }
   }
 

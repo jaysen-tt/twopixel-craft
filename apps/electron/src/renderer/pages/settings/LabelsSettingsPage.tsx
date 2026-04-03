@@ -1,17 +1,5 @@
-/**
- * LabelsSettingsPage
- *
- * Displays workspace label configuration in two data tables:
- * 1. Label Hierarchy - tree table with expand/collapse showing all labels
- * 2. Auto-Apply Rules - flat table showing all regex rules across labels
- *
- * Each section has an Edit button that opens an EditPopover for AI-assisted editing
- * of the underlying labels/config.json file.
- *
- * Data is loaded via the useLabels hook which subscribes to live config changes.
- */
-
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
@@ -37,16 +25,15 @@ export const meta: DetailsPageMeta = {
 }
 
 export default function LabelsSettingsPage() {
+  const { t } = useTranslation()
   const { activeWorkspaceId } = useAppShellContext()
   const activeWorkspace = useActiveWorkspace()
   const { labels, isLoading } = useLabels(activeWorkspaceId)
 
-  // Resolve edit configs using the workspace root path
   const rootPath = activeWorkspace?.rootPath || ''
   const labelsEditConfig = getEditConfig('edit-labels', rootPath)
   const autoRulesEditConfig = getEditConfig('edit-auto-rules', rootPath)
 
-  // Secondary action: open the labels config file directly in system editor
   const editFileAction = rootPath ? {
     label: 'Edit File',
     filePath: `${rootPath}/labels/config.json`,
@@ -54,7 +41,7 @@ export default function LabelsSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Labels" actions={<HeaderMenu route={routes.view.settings('labels')} />} />
+      <PanelHeader title={t('settings.labels')} actions={<HeaderMenu route={routes.view.settings('labels')} />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
@@ -65,8 +52,7 @@ export default function LabelsSettingsPage() {
                 </div>
               ) : (
                 <>
-                  {/* About Section */}
-                  <SettingsSection title="About Labels">
+                  <SettingsSection title={t('settings.labelsSettings.aboutLabels')}>
                     <SettingsCard className="px-4 py-3.5">
                       <div className="text-sm text-muted-foreground leading-relaxed space-y-1.5">
                         <p>
@@ -84,17 +70,16 @@ export default function LabelsSettingsPage() {
                             onClick={() => window.electronAPI?.openUrl(getDocUrl('labels'))}
                             className="text-foreground/70 hover:text-foreground underline underline-offset-2"
                           >
-                            Learn more
+                            {t('common.learnMore')}
                           </button>
                         </p>
                       </div>
                     </SettingsCard>
                   </SettingsSection>
 
-                  {/* Label Hierarchy Section */}
                   <SettingsSection
-                    title="Label Hierarchy"
-                    description="All labels configured for this workspace. Labels can be nested to form groups."
+                    title={t('settings.labelsSettings.labelHierarchy')}
+                    description={t('settings.labelsSettings.labelHierarchyDesc', 'All labels configured for this workspace. Labels can be nested to form groups.')}
                     action={
                       <EditPopover
                         trigger={<EditButton />}
@@ -113,7 +98,7 @@ export default function LabelsSettingsPage() {
                           searchable
                           maxHeight={350}
                           fullscreen
-                          fullscreenTitle="Label Hierarchy"
+                          fullscreenTitle={t('settings.labelsSettings.labelHierarchy')}
                         />
                       ) : (
                         <div className="p-8 text-center text-muted-foreground">
@@ -126,7 +111,6 @@ export default function LabelsSettingsPage() {
                     </SettingsCard>
                   </SettingsSection>
 
-                  {/* Auto-Apply Rules Section */}
                   <SettingsSection
                     title="Auto-Apply Rules"
                     description="Regex patterns that automatically apply labels when matched in user messages. For example, paste a Linear issue URL and automatically tag the session with the project name and issue ID."

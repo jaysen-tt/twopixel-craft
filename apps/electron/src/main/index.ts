@@ -1,9 +1,16 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 // Load user's shell environment first (before other imports that may use env)
 // This ensures tools like Homebrew, nvm, etc. are available to the agent
 import { loadShellEnv } from './shell-env'
 loadShellEnv()
 
-import { app, BrowserWindow, dialog, ipcMain, nativeImage, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeImage, nativeTheme, shell, Tray, Menu } from 'electron'
 import { createHash, randomUUID } from 'crypto'
 import { hostname, homedir } from 'os'
 import * as Sentry from '@sentry/electron/main'
@@ -78,7 +85,8 @@ import { setSearchPlatform, setImageProcessor } from '@craft-agent/server-core/s
 import { createApplicationMenu } from './menu'
 import { WindowManager } from './window-manager'
 import { loadWindowState, saveWindowState } from './window-state'
-import { getWorkspaces, getWorkspaceByNameOrId, loadStoredConfig, addWorkspace, saveConfig } from '@craft-agent/shared/config'
+import { getWorkspaces, getWorkspaceByNameOrId, loadStoredConfig, addWorkspace, saveConfig, addLlmConnection, getLlmConnections } from '@craft-agent/shared/config'
+import { TWOPIXEL_BUILTIN_CONNECTION } from '@craft-agent/shared/config'
 import { getDefaultWorkspacesDir } from '@craft-agent/shared/workspaces'
 import { initializeDocs } from '@craft-agent/shared/docs'
 import { initializeReleaseNotes } from '@craft-agent/shared/release-notes'
@@ -99,6 +107,7 @@ import { initNotificationService, initBadgeIcon, initInstanceBadge, updateBadgeC
 import { checkForUpdatesOnLaunch, setAutoUpdateEventSink, isUpdating } from './auto-update'
 import type { EventSink } from '@craft-agent/server-core/transport'
 import { validateGitBashPath, checkVCRedistInstalled } from '@craft-agent/server-core/services'
+import { TwoPixelPlatformAdapter } from '@craft-agent/shared/adapters/twopixel-platform'
 
 // Initialize electron-log for renderer process support
 log.initialize()
@@ -181,6 +190,7 @@ registerPiModelResolver((piAuthProvider) =>
 const DEEPLINK_SCHEME = process.env.CRAFT_DEEPLINK_SCHEME || 'craftagents'
 
 let windowManager: WindowManager | null = null
+let appTray: Tray | null = null
 let sessionManager: SessionManager | null = null
 let browserPaneManager: BrowserPaneManager | null = null
 let oauthFlowStore: OAuthFlowStore | null = null
@@ -192,7 +202,7 @@ let pendingDeepLink: string | null = null
 
 // Set app name early (before app.whenReady) to ensure correct macOS menu bar title
 // Supports multi-instance dev: CRAFT_APP_NAME env var (e.g., "Craft Agents [1]")
-app.setName(process.env.CRAFT_APP_NAME || 'Craft Agents')
+app.setName(process.env.CRAFT_APP_NAME || 'TwoPixel')
 
 // Register as default protocol client for craftagents:// URLs
 // This must be done before app.whenReady() on some platforms
@@ -312,6 +322,13 @@ async function createInitialWindows(): Promise<void> {
     mainLog.info('Created default workspace on first run')
   }
 
+  // Ensure TwoPixel built-in connection exists
+  const connections = getLlmConnections()
+  if (!connections.some(c => c.slug === TWOPIXEL_BUILTIN_CONNECTION.slug)) {
+    addLlmConnection(TWOPIXEL_BUILTIN_CONNECTION)
+    mainLog.info('Added TwoPixel built-in LLM connection')
+  }
+
   const validWorkspaceIds = workspaces.map(ws => ws.id)
 
   if (savedState?.windows.length) {
@@ -375,10 +392,10 @@ app.whenReady().then(async () => {
   // Ensure default permissions file exists (copies bundled default.json on first run)
   ensureDefaultPermissions()
 
-  // Seed tool icons to ~/.craft-agent/tool-icons/ (copies bundled SVGs on first run)
+  // Seed tool icons to ~/.twopixel/tool-icons/ (copies bundled SVGs on first run)
   ensureToolIcons()
 
-  // Seed preset themes to ~/.craft-agent/themes/ (copies bundled theme JSONs on first run)
+  // Seed preset themes to ~/.twopixel/themes/ (copies bundled theme JSONs on first run)
   ensurePresetThemes()
 
   // Register thumbnail:// protocol handler (scheme was registered earlier, before app.whenReady)
@@ -418,6 +435,58 @@ app.whenReady().then(async () => {
     }
   }
 
+  // Set up Tray Icon
+  const trayIconPath = app.isPackaged
+    ? join(__dirname, '../resources/tray-icon.png')
+    : join(__dirname, '../../resources/icon.png') // fallback to normal icon if tray icon is missing
+
+  if (existsSync(trayIconPath)) {
+    const icon = nativeImage.createFromPath(trayIconPath).resize({ width: 16, height: 16 })
+    appTray = new Tray(icon)
+    appTray.setToolTip('TwoPixel Background Service')
+    
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Open TwoPixel',
+        click: () => {
+          if (windowManager) {
+            const allWindows = BrowserWindow.getAllWindows()
+            if (allWindows.length > 0) {
+              allWindows[0].show()
+              allWindows[0].focus()
+            } else {
+              const workspaces = getWorkspaces()
+              if (workspaces.length > 0) {
+                const savedState = loadWindowState()
+                const wsId = savedState?.lastFocusedWorkspaceId || workspaces[0].id
+                windowManager.createWindow({ workspaceId: wsId })
+              }
+            }
+          }
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => {
+          // Force quit when explicitly requested from Tray
+          if (windowManager) {
+            windowManager.setAppQuitting(true)
+          }
+          if (sessionManager) {
+            sessionManager.cleanup()
+          }
+          app.quit()
+        }
+      }
+    ])
+    
+    appTray.setContextMenu(contextMenu)
+    appTray.on('click', () => {
+      appTray?.popUpContextMenu()
+    })
+  }
+
   try {
     // Initialize window manager
     windowManager = new WindowManager()
@@ -454,6 +523,93 @@ app.whenReady().then(async () => {
       getLogFilePath,
       captureError: (err) => Sentry.captureException(err),
     })
+
+    // Initialize TwoPixel Message Gateway connection
+    const gatewayUrl = process.env.TWOPIXEL_GATEWAY_URL || 'wss://api.2pixel.cn/api/v1/ws/desktop';
+    mainLog.info(`[TwoPixelPlatform] Connecting to Gateway URL: ${gatewayUrl}`);
+    const platformAdapter = new TwoPixelPlatformAdapter({
+      url: gatewayUrl,
+      clientId: `desktop-${machineId.slice(0, 8)}`,
+      onConnect: () => mainLog.info('[TwoPixelPlatform] Connected to Gateway'),
+      onDisconnect: () => mainLog.warn('[TwoPixelPlatform] Disconnected from Gateway'),
+      onMessage: async (msg) => {
+        mainLog.info(`[TwoPixelPlatform] Received msg type: ${msg.type}`);
+        const isExecuteTask = msg.type === 'execute_task' && msg.prompt;
+        const isChatMsg = msg.type === 'chat' && msg.content;
+        const isGetSessions = msg.type === 'get_sessions';
+        const isGetHistory = msg.type === 'get_history' && msg.session_id;
+
+        if (isGetSessions) {
+          mainLog.info('[TwoPixelPlatform] Processing get_sessions request');
+          const workspaces = getWorkspaces()
+          mainLog.info(`[TwoPixelPlatform] Workspaces count: ${workspaces.length}, sessionManager exists: ${!!sessionManager}`);
+          if (workspaces.length > 0 && sessionManager) {
+            const wsId = workspaces[0].id
+            const sessions = sessionManager.getSessions(wsId)
+            mainLog.info(`[TwoPixelPlatform] Found ${sessions.length} sessions for workspace ${wsId}`);
+            
+            // Map sessions to a simpler format for mobile
+            const sessionList = sessions.map(s => ({
+              id: s.id,
+              title: s.name || 'New Chat',
+              updatedAt: s.lastMessageAt || s.createdAt || Date.now(),
+              messageCount: s.messageCount || 0,
+              preview: s.preview || ''
+            }))
+            
+            platformAdapter.send({
+              type: 'sessions_list',
+              sessions: sessionList
+            });
+            mainLog.info('[TwoPixelPlatform] Sent sessions_list to gateway');
+          }
+          return;
+        }
+
+        if (isGetHistory) {
+          if (sessionManager) {
+            const session = await sessionManager.getSession(msg.session_id)
+            if (session) {
+              platformAdapter.send({
+                type: 'session_history',
+                session_id: msg.session_id,
+                history: session.messages
+              });
+            }
+          }
+          return;
+        }
+        
+        if (isExecuteTask || isChatMsg) {
+          const promptText = msg.prompt || msg.content;
+          // Send task to the active workspace session
+          const workspaces = getWorkspaces()
+          if (workspaces.length > 0 && sessionManager) {
+            const wsId = workspaces[0].id
+            let sessionId = msg.session_id;
+            
+            if (!sessionId) {
+              const newSession = await sessionManager.createSession(wsId)
+              sessionId = newSession.id
+              
+              // Notify mobile about the newly created session
+              platformAdapter.send({
+                type: 'session_created',
+                session_id: sessionId,
+                title: newSession.name || 'New Chat'
+              });
+            }
+            
+            if (sessionId) {
+              mainLog.info(`[TwoPixelPlatform] Executing task in session ${sessionId}: ${promptText}`);
+              const origin = msg.origin || 'mobile';
+              await sessionManager.sendMessage(sessionId, promptText, undefined, undefined, { origin: origin as 'mobile' | 'desktop' });
+            }
+          }
+        }
+      }
+    });
+    platformAdapter.connect();
 
     // Bootstrap IPC handlers — preload uses sendSync for window-local details
     ipcMain.on('__get-web-contents-id', (e) => {
@@ -634,7 +790,23 @@ app.whenReady().then(async () => {
         registerAllRpcHandlers: isHeadless
           ? (server, deps, serverCtx) => registerCoreRpcHandlers(server, deps, serverCtx)
           : registerAllRpcHandlers,
-        setSessionEventSink: (sm, sink) => sm.setEventSink(sink),
+        setSessionEventSink: (sm, sink) => {
+          const wrapperSink = (channel: string, target: any, ...args: any[]) => {
+            sink(channel, target, ...args);
+            // Broadcast to TwoPixel Platform Adapter
+            if (channel === 'session:event') {
+              const payload = args[0];
+              if (payload && payload.type === 'agent_message_chunk' && payload.sessionId) {
+                 platformAdapter.broadcastStreamDelta(payload.sessionId, payload.delta || '');
+              } else if (payload && payload.type === 'agent_state' && payload.sessionId) {
+                 platformAdapter.broadcastAgentState(payload.sessionId, payload.state, payload);
+              } else if (payload && payload.type === 'session_status_changed' && payload.sessionId) {
+                 platformAdapter.broadcastAgentState(payload.sessionId, payload.status, payload);
+              }
+            }
+          };
+          sm.setEventSink(wrapperSink);
+        },
         initializeSessionManager: (sm) => sm.initialize(),
         initModelRefreshService: () => initModelRefreshService(async (slug: string) => {
           const { getCredentialManager } = await import('@craft-agent/shared/credentials')
@@ -688,10 +860,23 @@ app.whenReady().then(async () => {
       })
 
       // App relaunch (for server config changes — NOT an update install)
-      ipcMain.handle('app:relaunch', () => {
-        app.relaunch()
-        app.exit(0)
+    ipcMain.handle('app:relaunch', () => {
+      app.relaunch()
+      app.exit(0)
+    })
+
+    // Auto-launch (Background Service)
+    ipcMain.handle('app:getAutoLaunch', () => {
+      return app.getLoginItemSettings().openAtLogin
+    })
+    
+    ipcMain.handle('app:setAutoLaunch', (_event, enable: boolean) => {
+      app.setLoginItemSettings({
+        openAtLogin: enable,
+        openAsHidden: true // Always start hidden (in Tray) when auto-launching
       })
+      return app.getLoginItemSettings().openAtLogin
+    })
 
       ipcMain.on('__get-ws-port', (e) => {
         e.returnValue = instance.port
@@ -861,9 +1046,10 @@ app.whenReady().then(async () => {
     // Skip in dev mode to avoid replacing /Applications app and launching it instead
     if (moduleSink) setAutoUpdateEventSink(moduleSink)
     if (app.isPackaged) {
-      checkForUpdatesOnLaunch().catch(err => {
-        mainLog.error('[auto-update] Launch check failed:', err)
-      })
+      // Disable auto-update on launch as requested
+      // checkForUpdatesOnLaunch().catch(err => {
+      //   mainLog.error('[auto-update] Launch check failed:', err)
+      // })
     } else {
       mainLog.info('[auto-update] Skipping auto-update in dev mode')
     }
@@ -885,30 +1071,34 @@ app.whenReady().then(async () => {
   }
 
   // macOS: Re-create window when dock icon is clicked
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0 && windowManager) {
-      // Open first workspace or last focused
+app.on('activate', () => {
+  if (windowManager) {
+    const allWindows = BrowserWindow.getAllWindows()
+    if (allWindows.length === 0) {
+      // Create new if none exist
       const workspaces = getWorkspaces()
       if (workspaces.length > 0) {
         const savedState = loadWindowState()
         const wsId = savedState?.lastFocusedWorkspaceId || workspaces[0].id
-        // Verify workspace still exists
         if (workspaces.some(ws => ws.id === wsId)) {
           windowManager.createWindow({ workspaceId: wsId })
         } else {
           windowManager.createWindow({ workspaceId: workspaces[0].id })
         }
       }
+    } else {
+      // Just show the existing hidden window
+      allWindows[0].show()
+      allWindows[0].focus()
     }
-  })
+  }
+})
 })
 
 app.on('window-all-closed', () => {
   if (process.env.CRAFT_HEADLESS) return  // headless server stays alive
-  // On macOS, apps typically stay active until explicitly quit
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  // In TwoPixel background mode, we never quit automatically
+  // unless explicitly requested by the user.
 })
 
 // Track if we're in the process of quitting (to avoid re-entry)

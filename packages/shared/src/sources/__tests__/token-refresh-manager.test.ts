@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Unit tests for TokenRefreshManager and isOAuthSource helper.
  *
  * Tests the proactive token refresh functionality that includes both:
@@ -376,7 +383,7 @@ describe('TokenRefreshManager', () => {
         slug: 'craft-mcp',
         type: 'mcp',
         provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        mcp: { url: 'https://mcp.2pixel.cn/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
       });
 
@@ -400,7 +407,7 @@ describe('TokenRefreshManager', () => {
         slug: 'craft-mcp',
         type: 'mcp',
         provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        mcp: { url: 'https://mcp.2pixel.cn/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
       });
 
@@ -426,7 +433,7 @@ describe('TokenRefreshManager', () => {
         slug: 'craft-mcp',
         type: 'mcp',
         provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        mcp: { url: 'https://mcp.2pixel.cn/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
         connectionStatus: 'needs_auth',
         connectionError: 'Token expired',
@@ -458,7 +465,7 @@ describe('TokenRefreshManager', () => {
         slug: 'craft-mcp',
         type: 'mcp',
         provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        mcp: { url: 'https://mcp.2pixel.cn/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
         connectionStatus: 'needs_auth',
       });
@@ -489,7 +496,7 @@ describe('TokenRefreshManager', () => {
         slug: 'craft-mcp',
         type: 'mcp',
         provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        mcp: { url: 'https://mcp.2pixel.cn/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
         connectionStatus: 'needs_auth',
         connectionError: 'Token expired',

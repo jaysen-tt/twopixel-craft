@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Credential Storage Types
  *
  * Defines the types for secure credential storage using AES-256-GCM encryption.
@@ -27,7 +34,7 @@ export type CredentialType =
   | 'llm_service_account' // GCP service account JSON
   // Workspace credentials
   | 'workspace_oauth'    // Workspace MCP OAuth token
-  // Source credentials (stored at ~/.craft-agent/workspaces/{ws}/sources/{slug}/)
+  // Source credentials (stored at ~/.twopixel/workspaces/{ws}/sources/{slug}/)
   | 'source_oauth'       // OAuth tokens for MCP/API sources
   | 'source_bearer'      // Bearer tokens
   | 'source_apikey'      // API keys

@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { Menu, app, shell, BrowserWindow } from 'electron'
 import { RPC_CHANNELS, type BroadcastEventMap } from '../shared/types'
 import { EDIT_MENU, VIEW_MENU, WINDOW_MENU } from '../shared/menu-schema'
@@ -232,7 +239,7 @@ export async function rebuildMenu(): Promise<void> {
       submenu: [
         {
           label: 'Help & Documentation',
-          click: () => shell.openExternal('https://agents.craft.do/docs')
+          click: () => shell.openExternal('https://agents.2pixel.cn/docs')
         },
         {
           label: 'Keyboard Shortcuts',

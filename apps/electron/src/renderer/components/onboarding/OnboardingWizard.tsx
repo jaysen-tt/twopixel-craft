@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { cn } from "@/lib/utils"
 import { WelcomeStep } from "./WelcomeStep"
 import type { ApiSetupMethod } from "./APISetupStep"
@@ -6,11 +13,16 @@ import { CredentialsStep, type CredentialStatus } from "./CredentialsStep"
 import { LocalModelStep, type LocalModelSubmitData } from "./LocalModelStep"
 import { CompletionStep } from "./CompletionStep"
 import { GitBashWarning, type GitBashStatus } from "./GitBashWarning"
+import { LoginStep } from "./LoginStep"
+import { RegisterStep } from "./RegisterStep"
 import type { ApiKeySubmitData } from "../apisetup"
 import type { CustomEndpointApi } from '@config/llm-connections'
+import type { TwoPixelAuthResult } from '@/lib/twopixel-auth'
 
 export type OnboardingStep =
   | 'welcome'
+  | 'login'
+  | 'register'
   | 'git-bash'
   | 'provider-select'
   | 'local-model'
@@ -43,6 +55,12 @@ interface OnboardingWizardProps {
   onSubmitCredential: (data: ApiKeySubmitData) => void
   onStartOAuth?: (methodOverride?: ApiSetupMethod) => void
   onFinish: () => void
+
+  // TwoPixel Auth
+  onLoginSuccess?: (result: TwoPixelAuthResult) => void
+  onRegisterSuccess?: (result: TwoPixelAuthResult) => void
+  onSwitchToLogin?: () => void
+  onSwitchToRegister?: () => void
 
   // Claude OAuth (two-step flow)
   isWaitingForCode?: boolean
@@ -96,6 +114,11 @@ export function OnboardingWizard({
   onSubmitCredential,
   onStartOAuth,
   onFinish,
+  // TwoPixel Auth
+  onLoginSuccess,
+  onRegisterSuccess,
+  onSwitchToLogin,
+  onSwitchToRegister,
   // Two-step OAuth flow
   isWaitingForCode,
   onSubmitAuthCode,
@@ -124,6 +147,22 @@ export function OnboardingWizard({
             isExistingUser={state.isExistingUser}
             onContinue={onContinue}
             isLoading={state.isCheckingGitBash}
+          />
+        )
+
+      case 'login':
+        return (
+          <LoginStep
+            onLoginSuccess={onLoginSuccess!}
+            onSwitchToRegister={onSwitchToRegister!}
+          />
+        )
+
+      case 'register':
+        return (
+          <RegisterStep
+            onRegisterSuccess={onRegisterSuccess!}
+            onSwitchToLogin={onSwitchToLogin!}
           />
         )
 

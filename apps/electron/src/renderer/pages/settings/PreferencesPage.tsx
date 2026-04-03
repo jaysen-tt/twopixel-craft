@@ -1,7 +1,14 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * PreferencesPage
  *
- * Form-based editor for stored user preferences (~/.craft-agent/preferences.json).
+ * Form-based editor for stored user preferences (~/.twopixel/preferences.json).
  * Features:
  * - Fixed input fields for known preferences (name, timezone, location, language)
  * - Free-form textarea for notes

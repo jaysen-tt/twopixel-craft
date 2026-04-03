@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Slack OAuth flow using Slack's OAuth 2.0 v2
  *
  * This module handles the complete Slack OAuth flow for USER authentication:
@@ -262,7 +269,7 @@ export function prepareSlackOAuth(options: PrepareSlackOAuthOptions): PreparedOA
   const state = generateState();
 
   // Slack requires HTTPS → use Cloudflare relay
-  const redirectUri = `https://agents.craft.do/auth/slack/callback?port=${options.callbackPort}`;
+  const redirectUri = `https://agents.2pixel.cn/auth/slack/callback?port=${options.callbackPort}`;
 
   const authUrl = new URL(SLACK_AUTH_URL);
   authUrl.searchParams.set('client_id', SLACK_CLIENT_ID);
@@ -352,8 +359,8 @@ export async function startSlackOAuth(options: SlackOAuthOptions = {}): Promise<
     const port = localUrl.port;
 
     // Use Cloudflare Worker relay for Slack OAuth (Slack requires HTTPS)
-    // The relay redirects: https://agents.craft.do/auth/slack/callback → http://localhost:{port}/callback
-    const redirectUri = `https://agents.craft.do/auth/slack/callback?port=${port}`;
+    // The relay redirects: https://agents.2pixel.cn/auth/slack/callback → http://localhost:{port}/callback
+    const redirectUri = `https://agents.2pixel.cn/auth/slack/callback?port=${port}`;
 
     // Build authorization URL
     // Use user_scope (not scope) to get a user token instead of bot token

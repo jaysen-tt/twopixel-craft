@@ -85,6 +85,7 @@ export const CHANNEL_MAP = {
   // System
   getVersions: invoke(RPC_CHANNELS.system.VERSIONS),
   getHomeDir: invoke(RPC_CHANNELS.system.HOME_DIR),
+  getAppRootPath: invoke(RPC_CHANNELS.system.APP_ROOT_PATH),
   isDebugMode: invoke(RPC_CHANNELS.system.IS_DEBUG_MODE),
 
   // Auto-update
@@ -119,6 +120,7 @@ export const CHANNEL_MAP = {
   showLogoutConfirmation: invoke(RPC_CHANNELS.auth.SHOW_LOGOUT_CONFIRMATION),
   showDeleteSessionConfirmation: invoke(RPC_CHANNELS.auth.SHOW_DELETE_SESSION_CONFIRMATION),
   logout: invoke(RPC_CHANNELS.auth.LOGOUT),
+  resetApp: invoke(RPC_CHANNELS.auth.RESET_APP),
   getCredentialHealth: invoke(RPC_CHANNELS.credentials.HEALTH_CHECK),
 
   // Onboarding

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -18,28 +19,21 @@ interface ResetConfirmationDialogProps {
   onCancel: () => void
 }
 
-/**
- * ResetConfirmationDialog - Destructive action confirmation with math problem
- *
- * Shows a warning about data loss and requires the user to solve a random
- * math problem to confirm the reset action.
- */
 export function ResetConfirmationDialog({
   open,
   onConfirm,
   onCancel,
 }: ResetConfirmationDialogProps) {
+  const { t } = useTranslation()
   const [answer, setAnswer] = useState("")
 
-  // Register with modal context so X button / Cmd+W closes this dialog first
   useRegisterModal(open, onCancel)
 
-  // Generate a random math problem when dialog opens
   const problem = useMemo(() => {
     const a = Math.floor(Math.random() * 50) + 10
     const b = Math.floor(Math.random() * 50) + 10
     return { a, b, sum: a + b }
-  }, [open]) // Regenerate when dialog opens
+  }, [open])
 
   const isCorrect = parseInt(answer) === problem.sum
 
@@ -61,35 +55,35 @@ export function ResetConfirmationDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            Reset App
+            {t('dialog.resetApp.title')}
           </DialogTitle>
           <DialogDescription className="text-left pt-2">
-            This will <strong>permanently delete</strong>:
+            {t('dialog.resetApp.description')}
           </DialogDescription>
         </DialogHeader>
 
         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 pl-2">
-          <li>All workspaces and their settings</li>
-          <li>All credentials and API keys</li>
-          <li>All preferences and session data</li>
+          <li>{t('dialog.resetApp.item1')}</li>
+          <li>{t('dialog.resetApp.item2')}</li>
+          <li>{t('dialog.resetApp.item3')}</li>
         </ul>
 
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-md p-3 text-sm">
-          <strong className="text-amber-600 dark:text-amber-400">Back up any important data first!</strong>
+          <strong className="text-amber-600 dark:text-amber-400">{t('dialog.resetApp.backup')}</strong>
           <p className="text-muted-foreground mt-1">
-            This action cannot be undone.
+            {t('dialog.resetApp.cannotUndo')}
           </p>
         </div>
 
         <div className="space-y-2 pt-2">
           <label className="text-sm font-medium">
-            To confirm, solve: {problem.a} + {problem.b} =
+            {t('dialog.resetApp.mathProblem')} {problem.a} + {problem.b} =
           </label>
           <Input
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
-            placeholder="Enter answer"
+            placeholder={t('dialog.resetApp.mathProblem')}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={(e) => {
@@ -103,14 +97,14 @@ export function ResetConfirmationDialog({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('dialog.resetApp.cancel')}
           </Button>
           <Button
             variant="destructive"
             disabled={!isCorrect}
             onClick={handleConfirm}
           >
-            Reset App
+            {t('dialog.resetApp.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

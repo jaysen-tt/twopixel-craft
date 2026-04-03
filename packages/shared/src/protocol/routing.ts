@@ -46,6 +46,7 @@ export const LOCAL_ONLY_CHANNELS = new Set<string>([
 
   // auth — local auth state + native dialogs
   RPC_CHANNELS.auth.LOGOUT,
+  RPC_CHANNELS.auth.RESET_APP,
   RPC_CHANNELS.auth.SHOW_LOGOUT_CONFIRMATION,
   RPC_CHANNELS.auth.SHOW_DELETE_SESSION_CONFIRMATION,
 
@@ -62,6 +63,7 @@ export const LOCAL_ONLY_CHANNELS = new Set<string>([
   RPC_CHANNELS.system.VERSIONS,
   RPC_CHANNELS.system.HOME_DIR,
   RPC_CHANNELS.system.IS_DEBUG_MODE,
+  RPC_CHANNELS.system.APP_ROOT_PATH,
 
   // theme — app/OS-level preferences, not workspace content
   RPC_CHANNELS.theme.GET_SYSTEM_PREFERENCE,

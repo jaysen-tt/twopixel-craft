@@ -1,15 +1,12 @@
 /**
- * AiSettingsPage
- *
- * Unified AI settings page that consolidates all LLM-related configuration:
- * - Default connection, model, and thinking level
- * - Per-workspace overrides
- * - Connection management (add/edit/delete)
- *
- * Follows the Appearance settings pattern: app-level defaults + workspace overrides.
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -201,6 +198,10 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
     }
   }, [connection.providerType, connection.type, connection.piAuthProvider, connection.baseUrl])
 
+  // Check if it's a builtin provider
+  const providerType = connection.providerType || connection.type
+  const isBuiltinProvider = providerType === 'pi' || providerType === 'pi_compat'
+
   // Build description with provider, default indicator, auth status, and validation state
   const getDescription = () => {
     // Show validation state if not idle
@@ -212,9 +213,8 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
 
     // Provider type (fall back to legacy 'type' field if providerType missing)
     // OAuth = subscription (Pro/Plus/Max), API key = API
-    const provider = connection.providerType || connection.type
     const isSubscription = connection.authType === 'oauth'
-    switch (provider) {
+    switch (providerType) {
       case 'anthropic': parts.push(isSubscription ? 'Anthropic Subscription' : 'Anthropic API'); break
       case 'anthropic_compat': parts.push('Anthropic Compatible'); break
       case 'bedrock': parts.push('AWS Bedrock'); break
@@ -224,22 +224,19 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
         const piLabel = !isSubscription && connection.piAuthProvider
           ? PI_AUTH_PROVIDER_LABELS[connection.piAuthProvider]
           : null
-        parts.push(piLabel ?? 'Craft Agents Backend')
+        parts.push(piLabel ?? 'TwoPixel AI Service')
         break
       }
-      case 'pi_compat': parts.push('Craft Agents Backend Compatible'); break
-      default: parts.push(provider || 'Unknown')
+      case 'pi_compat': parts.push('TwoPixel AI Service'); break
+      default: parts.push(providerType || 'Unknown')
     }
 
     // Base URL for API key connections (show custom endpoint or default for provider)
-    if (connection.authType !== 'oauth') {
+    if (connection.authType !== 'oauth' && !isBuiltinProvider) {
       let endpoint = connection.baseUrl
       // Use default endpoints for standard providers if no custom baseUrl
       if (!endpoint) {
-        if (provider === 'anthropic') endpoint = 'https://api.anthropic.com'
-        else if (provider === 'pi' && connection.piAuthProvider) {
-          endpoint = piBaseUrl
-        }
+        if (providerType === 'anthropic') endpoint = 'https://api.anthropic.com'
       }
       if (endpoint) {
         // Extract hostname from URL for cleaner display
@@ -273,55 +270,57 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
       )}
       description={getDescription()}
     >
-      <DropdownMenu modal={false} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="p-1.5 rounded-md hover:bg-foreground/[0.05] data-[state=open]:bg-foreground/[0.05] transition-colors"
-            data-state={menuOpen ? 'open' : 'closed'}
-          >
-            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <StyledDropdownMenuContent align="end">
-          <StyledDropdownMenuItem onClick={() => runAfterMenuClose(onRenameClick)}>
-            <Pencil className="h-3.5 w-3.5" />
-            <span>Rename</span>
-          </StyledDropdownMenuItem>
-          {!connection.isDefault && (
-            <StyledDropdownMenuItem onClick={onSetDefault}>
-              <Star className="h-3.5 w-3.5" />
-              <span>Set as default</span>
+      {!isBuiltinProvider && (
+        <DropdownMenu modal={false} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="p-1.5 rounded-md hover:bg-foreground/[0.05] data-[state=open]:bg-foreground/[0.05] transition-colors"
+              data-state={menuOpen ? 'open' : 'closed'}
+            >
+              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <StyledDropdownMenuContent align="end">
+            <StyledDropdownMenuItem onClick={() => runAfterMenuClose(onRenameClick)}>
+              <Pencil className="h-3.5 w-3.5" />
+              <span>Rename</span>
             </StyledDropdownMenuItem>
-          )}
-          {connection.authType === 'oauth' ? (
-            <StyledDropdownMenuItem onClick={() => runAfterMenuClose(onReauthenticate)}>
-              <RefreshCcw className="h-3.5 w-3.5" />
-              <span>Re-authenticate</span>
+            {!connection.isDefault && (
+              <StyledDropdownMenuItem onClick={onSetDefault}>
+                <Star className="h-3.5 w-3.5" />
+                <span>Set as default</span>
+              </StyledDropdownMenuItem>
+            )}
+            {connection.authType === 'oauth' ? (
+              <StyledDropdownMenuItem onClick={() => runAfterMenuClose(onReauthenticate)}>
+                <RefreshCcw className="h-3.5 w-3.5" />
+                <span>Re-authenticate</span>
+              </StyledDropdownMenuItem>
+            ) : (
+              <StyledDropdownMenuItem onClick={() => runAfterMenuClose(onEdit)}>
+                <Settings2 className="h-3.5 w-3.5" />
+                <span>Edit</span>
+              </StyledDropdownMenuItem>
+            )}
+            <StyledDropdownMenuItem
+              onClick={onValidate}
+              disabled={validationState === 'validating'}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Validate Connection</span>
             </StyledDropdownMenuItem>
-          ) : (
-            <StyledDropdownMenuItem onClick={() => runAfterMenuClose(onEdit)}>
-              <Settings2 className="h-3.5 w-3.5" />
-              <span>Edit</span>
+            <StyledDropdownMenuSeparator />
+            <StyledDropdownMenuItem
+              onClick={onDelete}
+              variant="destructive"
+              disabled={isLastConnection}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>Delete</span>
             </StyledDropdownMenuItem>
-          )}
-          <StyledDropdownMenuItem
-            onClick={onValidate}
-            disabled={validationState === 'validating'}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>Validate Connection</span>
-          </StyledDropdownMenuItem>
-          <StyledDropdownMenuSeparator />
-          <StyledDropdownMenuItem
-            onClick={onDelete}
-            variant="destructive"
-            disabled={isLastConnection}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span>Delete</span>
-          </StyledDropdownMenuItem>
-        </StyledDropdownMenuContent>
-      </DropdownMenu>
+          </StyledDropdownMenuContent>
+        </DropdownMenu>
+      )}
     </SettingsRow>
   )
 }
@@ -553,9 +552,9 @@ function getApiKeyMethodForConnection(conn: LlmConnectionWithStatus): ApiSetupMe
 // ============================================
 
 export default function AiSettingsPage() {
+  const { t } = useTranslation()
   const { llmConnections, refreshLlmConnections, activeWorkspaceId } = useAppShellContext()
 
-  // API Setup overlay state
   const [showApiSetup, setShowApiSetup] = useState(false)
   const [editingConnectionSlug, setEditingConnectionSlug] = useState<string | null>(null)
   const [isDirectEdit, setIsDirectEdit] = useState(false)
@@ -888,7 +887,7 @@ export default function AiSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="AI" actions={<HeaderMenu route={routes.view.settings('ai')} />} />
+      <PanelHeader title={t('settings.aiSettings.title')} actions={<HeaderMenu route={routes.view.settings('ai')} />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
@@ -901,11 +900,11 @@ export default function AiSettingsPage() {
             <div className="space-y-8">
               {/* Default Settings - only show if connections exist */}
               {llmConnections.length > 0 && (
-              <SettingsSection title="Default" description="Settings for new chats when no workspace override is set.">
+              <SettingsSection title={t('settings.aiSettings.default')} description={t('settings.aiSettings.defaultDesc')}>
                 <SettingsCard>
                   <SettingsMenuSelectRow
-                    label="Connection"
-                    description="API connection for new chats"
+                    label={t('settings.aiSettings.connection', 'Connection')}
+                    description={t('settings.aiSettings.connectionDesc', 'API connection for new chats')}
                     value={defaultConnection?.slug || ''}
                     onValueChange={handleSetDefaultConnection}
                     options={llmConnections.map((conn) => ({
@@ -914,21 +913,21 @@ export default function AiSettingsPage() {
                       description: conn.providerType === 'anthropic' ? 'Anthropic API' :
                                    conn.providerType === 'bedrock' ? 'AWS Bedrock' :
                                    conn.providerType === 'vertex' ? 'Google Vertex' :
-                                   conn.providerType === 'pi' ? 'Craft Agents Backend' :
-                                   conn.providerType === 'pi_compat' ? 'Craft Agents Backend Compatible' :
+                                   conn.providerType === 'pi' ? 'TwoPixel AI Service' :
+                                   conn.providerType === 'pi_compat' ? 'TwoPixel AI Service' :
                                    conn.providerType || 'Unknown',
                     }))}
                   />
                   <SettingsMenuSelectRow
-                    label="Model"
-                    description="AI model for new chats"
+                    label={t('settings.aiSettings.model', 'Model')}
+                    description={t('settings.aiSettings.modelDesc', 'AI model for new chats')}
                     value={defaultModel}
                     onValueChange={handleDefaultModelChange}
                     options={getModelOptionsForConnection(defaultConnection)}
                   />
                   <SettingsMenuSelectRow
-                    label="Thinking"
-                    description="Reasoning depth for new chats"
+                    label={t('settings.aiSettings.thinking', 'Thinking')}
+                    description={t('settings.aiSettings.thinkingDesc', 'Reasoning depth for new chats')}
                     value={defaultThinking}
                     onValueChange={(v) => handleDefaultThinkingChange(v as ThinkingLevel)}
                     options={THINKING_LEVELS.map(({ id, name, description }) => ({
@@ -943,7 +942,7 @@ export default function AiSettingsPage() {
 
               {/* Workspace Overrides - only show if connections exist */}
               {workspaces.length > 0 && llmConnections.length > 0 && (
-                <SettingsSection title="Workspace Overrides" description="Override default settings per workspace.">
+                <SettingsSection title={t('settings.aiSettings.workspaceOverrides')} description={t('settings.aiSettings.workspaceOverridesDesc')}>
                   <div className="space-y-2">
                     {workspaces.map((workspace) => (
                       <WorkspaceOverrideCard
@@ -958,7 +957,7 @@ export default function AiSettingsPage() {
               )}
 
               {/* Connections Management */}
-              <SettingsSection title="Connections" description="Manage your AI provider connections.">
+              <SettingsSection title={t('settings.aiSettings.connections')} description={t('settings.aiSettings.connectionsDesc')}>
                 <SettingsCard>
                   {llmConnections.length === 0 ? (
                     <div className="px-4 py-6 text-center text-sm text-muted-foreground">
@@ -988,32 +987,7 @@ export default function AiSettingsPage() {
                     ))
                   )}
                 </SettingsCard>
-                <div className="pt-0">
-                  <button
-                    onClick={() => openApiSetup()}
-                    className="inline-flex items-center h-8 px-3 text-sm rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02] transition-colors"
-                  >
-                    + Add Connection
-                  </button>
-                </div>
-              </SettingsSection>
-
-              {/* Performance */}
-              <SettingsSection title="Performance" description="Cost and caching options.">
-                <SettingsCard>
-                  <SettingsToggle
-                    label="Extended Context (1M)"
-                    description="Use 1M token context window for Opus 4.6. Disable to use 200K and conserve usage limits."
-                    checked={enable1MContext}
-                    onCheckedChange={handleEnable1MContextChange}
-                  />
-                  <SettingsToggle
-                    label="Extended prompt cache (1 hour)"
-                    description="Cache prompts for 1 hour instead of 5 minutes. Only applies to Claude models via Anthropic API. Reduces cost for long sessions but increases cache write cost."
-                    checked={extendedPromptCache}
-                    onCheckedChange={handleExtendedPromptCacheChange}
-                  />
-                </SettingsCard>
+                {/* Add Connection button has been removed by TwoPixel Team for commercial proxy restrictions */}
               </SettingsSection>
 
               {/* API Setup Fullscreen Overlay */}

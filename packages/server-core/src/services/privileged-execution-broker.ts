@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { createHash } from 'node:crypto'
 import { appendFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -22,7 +29,7 @@ interface PendingPrivilegedRequest extends PrivilegedExecutionRequest {
 }
 
 const DEFAULT_APPROVAL_TTL_SECONDS = 120
-const AUDIT_LOG_PATH = join(homedir(), '.craft-agent', 'logs', 'privileged-actions.jsonl')
+const AUDIT_LOG_PATH = join(homedir(), '.twopixel', 'logs', 'privileged-actions.jsonl')
 
 /**
  * PrivilegedExecutionBroker

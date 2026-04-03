@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * AppearanceSettingsPage
  *
  * Visual customization settings: theme mode, color theme, font,
@@ -6,6 +13,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -93,6 +101,7 @@ const toolIconColumns: ColumnDef<ToolIconMapping>[] = [
 // ============================================
 
 export default function AppearanceSettingsPage() {
+  const { t } = useTranslation()
   const {
     mode,
     setMode,
@@ -183,7 +192,7 @@ export default function AppearanceSettingsPage() {
           window.electronAPI.getHomeDir(),
         ])
         setToolIcons(mappings)
-        setToolIconsJsonPath(`${homeDir}/.craft-agent/tool-icons/tool-icons.json`)
+        setToolIconsJsonPath(`${homeDir}/.twopixel/tool-icons/tool-icons.json`)
       } catch (error) {
         console.error('Failed to load tool icon mappings:', error)
       }
@@ -236,42 +245,41 @@ export default function AppearanceSettingsPage() {
   return (
     <div className="h-full flex flex-col">
       <PanelHeader
-        title="Appearance"
+        title={t('settings.appearanceSettings.title')}
         actions={<HeaderMenu route={routes.view.settings('appearance')} helpFeature="themes" />}
       />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
             <div className="space-y-8">
-
               {/* Default Theme */}
-              <SettingsSection title="Default Theme">
+              <SettingsSection title={t('settings.appearanceSettings.defaultTheme')}>
                 <SettingsCard>
-                  <SettingsRow label="Mode">
+                  <SettingsRow label={t('settings.appearanceSettings.mode')}>
                     <SettingsSegmentedControl
                       value={mode}
                       onValueChange={setMode}
                       options={[
-                        { value: 'system', label: 'System', icon: <Monitor className="w-4 h-4" /> },
-                        { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
-                        { value: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
+                        { value: 'system', label: t('settings.appearanceSettings.system'), icon: <Monitor className="w-4 h-4" /> },
+                        { value: 'light', label: t('settings.appearanceSettings.light'), icon: <Sun className="w-4 h-4" /> },
+                        { value: 'dark', label: t('settings.appearanceSettings.dark'), icon: <Moon className="w-4 h-4" /> },
                       ]}
                     />
                   </SettingsRow>
-                  <SettingsRow label="Color theme">
+                  <SettingsRow label={t('settings.appearanceSettings.colorTheme')}>
                     <SettingsMenuSelect
                       value={colorTheme}
                       onValueChange={setColorTheme}
                       options={themeOptions}
                     />
                   </SettingsRow>
-                  <SettingsRow label="Font">
+                  <SettingsRow label={t('settings.appearanceSettings.font')}>
                     <SettingsSegmentedControl
                       value={font}
                       onValueChange={setFont}
                       options={[
                         { value: 'inter', label: 'Inter' },
-                        { value: 'system', label: 'System' },
+                        { value: 'system', label: t('settings.appearanceSettings.system') },
                       ]}
                     />
                   </SettingsRow>
@@ -286,8 +294,8 @@ export default function AppearanceSettingsPage() {
               {/* Workspace Themes */}
               {workspaces.length > 0 && (
                 <SettingsSection
-                  title="Workspace Themes"
-                  description="Override theme settings per workspace"
+                  title={t('settings.appearanceSettings.workspaceThemes')}
+                  description={t('settings.appearanceSettings.workspaceThemesDesc')}
                 >
                   <SettingsCard>
                     {workspaces.map((workspace) => {
@@ -305,7 +313,9 @@ export default function AppearanceSettingsPage() {
                                   className="w-4 h-4 rounded object-cover"
                                 />
                               ) : (
-                                <div className="w-4 h-4 rounded bg-foreground/10" />
+                                <div className="w-4 h-4 rounded bg-primary/10 text-primary flex items-center justify-center text-[10px] font-medium">
+                                  {workspace.name.charAt(0).toUpperCase()}
+                                </div>
                               )}
                               <span>{workspace.name}</span>
                             </div>
@@ -315,7 +325,7 @@ export default function AppearanceSettingsPage() {
                             value={hasCustomTheme ? wsTheme : 'default'}
                             onValueChange={(value) => handleWorkspaceThemeChange(workspace.id, value)}
                             options={[
-                              { value: 'default', label: appDefaultLabel ? `Use Default (${appDefaultLabel})` : 'Use Default' },
+                              { value: 'default', label: appDefaultLabel ? `${t('settings.appearanceSettings.useDefault')} (${appDefaultLabel})` : t('settings.appearanceSettings.useDefault') },
                               ...presetThemes
                                 .filter(t => t.id !== 'default')
                                 .map(t => ({
@@ -332,17 +342,17 @@ export default function AppearanceSettingsPage() {
               )}
 
               {/* Interface */}
-              <SettingsSection title="Interface">
+              <SettingsSection title={t('settings.appearanceSettings.interface')}>
                 <SettingsCard>
                   <SettingsToggle
-                    label="Connection icons"
-                    description="Show provider icons in the session list and model selector"
+                    label={t('settings.appearanceSettings.connectionIcons')}
+                    description={t('settings.appearanceSettings.connectionIconsDesc')}
                     checked={showConnectionIcons}
                     onCheckedChange={handleConnectionIconsChange}
                   />
                   <SettingsToggle
-                    label="Rich tool descriptions"
-                    description="Add action names and intent descriptions to all tool calls. Provides richer activity context in sessions."
+                    label={t('settings.appearanceSettings.richToolDescriptions')}
+                    description={t('settings.appearanceSettings.richToolDescriptionsDesc')}
                     checked={richToolDescriptions}
                     onCheckedChange={handleRichToolDescriptionsChange}
                   />
@@ -351,15 +361,15 @@ export default function AppearanceSettingsPage() {
 
               {/* Tool Icons — shows the command → icon mapping used in turn cards */}
               <SettingsSection
-                title="Tool Icons"
-                description="Icons shown next to CLI commands in chat activity. Stored in ~/.craft-agent/tool-icons/."
+                title={t('settings.appearanceSettings.toolIcons')}
+                description={t('settings.appearanceSettings.toolIconsDesc')}
                 action={
                   toolIconsJsonPath ? (
                     <EditPopover
                       trigger={<EditButton />}
                       {...getEditConfig('edit-tool-icons', toolIconsJsonPath)}
                       secondaryAction={{
-                        label: 'Edit File',
+                        label: t('settings.appearanceSettings.editFile'),
                         filePath: toolIconsJsonPath,
                       }}
                     />
@@ -370,9 +380,9 @@ export default function AppearanceSettingsPage() {
                   <Info_DataTable
                     columns={toolIconColumns}
                     data={toolIcons}
-                    searchable={{ placeholder: 'Search tools...' }}
+                    searchable={{ placeholder: t('settings.appearanceSettings.searchTools') }}
                     maxHeight={480}
-                    emptyContent="No tool icon mappings found"
+                    emptyContent={t('settings.appearanceSettings.noToolIcons')}
                   />
                 </SettingsCard>
               </SettingsSection>

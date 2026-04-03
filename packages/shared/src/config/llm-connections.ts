@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * LLM Connections
  *
  * Named provider configurations that users can add, configure, and switch between.
@@ -946,4 +953,41 @@ export function migrateLlmConnection(legacy: {
     createdAt: legacy.createdAt,
     lastUsedAt: legacy.lastUsedAt,
   };
+}
+
+// ============================================================
+// TwoPixel Built-in Connection
+// ============================================================
+
+/**
+ * TwoPixel built-in LLM connection configuration.
+ * Points to the TwoPixel LLM proxy server with pre-configured models.
+ * Uses OpenAI-compatible API format (pi_compat provider).
+ */
+export const TWOPIXEL_BUILTIN_CONNECTION: LlmConnection = {
+  slug: 'twopixel-built-in',
+  name: 'TwoPixel AI',
+  providerType: 'pi_compat',
+  baseUrl: 'http://43.160.252.207:16686/v1',
+  authType: 'api_key_with_endpoint',
+  customEndpoint: { api: 'openai-completions' },
+  piAuthProvider: 'openai',
+  models: [
+    'deepseek-proxy', // DeepSeek 最新版中转
+    'kimi-proxy',     // Kimi 最新版中转
+    'qwen-proxy',     // Qwen 最新版中转
+    'glm-proxy',      // GLM 最新版中转
+    'gemini-proxy',   // Gemini 最新版中转
+  ],
+  defaultModel: 'deepseek-proxy',
+  createdAt: Date.now(),
+};
+
+/**
+ * Check if a connection is the TwoPixel built-in connection.
+ * @param slug - Connection slug to check
+ * @returns true if this is the TwoPixel built-in connection
+ */
+export function isTwoPixelBuiltinConnection(slug: string): boolean {
+  return slug === TWOPIXEL_BUILTIN_CONNECTION.slug;
 }

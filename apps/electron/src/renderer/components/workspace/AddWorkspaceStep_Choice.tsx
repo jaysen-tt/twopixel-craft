@@ -1,4 +1,5 @@
 import { FolderPlus, FolderOpen, Cloud } from "lucide-react"
+import { useTranslation } from 'react-i18next'
 import { cn } from "@/lib/utils"
 import { AddWorkspaceContainer, AddWorkspaceStepHeader } from "./primitives"
 
@@ -58,34 +59,36 @@ export function AddWorkspaceStep_Choice({
   onOpenFolder,
   onConnectRemote,
 }: AddWorkspaceStep_ChoiceProps) {
+  const { t } = useTranslation()
+  
   return (
     <AddWorkspaceContainer>
       <div className="mt-2" />
       <AddWorkspaceStepHeader
-        title="Add Workspace"
-        description="Where your ideas meet the tools to make them happen."
+        title={t('onboarding.workspaceChoice.title')}
+        description={t('onboarding.workspaceChoice.description')}
       />
 
       <div className="mt-8 w-full space-y-3">
         <ChoiceCard
           icon={<FolderPlus className="h-5 w-5" />}
-          title="Create new"
-          description="Start fresh with an empty workspace."
+          title={t('onboarding.workspaceChoice.createNew')}
+          description={t('onboarding.workspaceChoice.createNewDesc')}
           onClick={onCreateNew}
           variant="primary"
         />
 
         <ChoiceCard
           icon={<FolderOpen className="h-5 w-5" />}
-          title="Open folder"
-          description="Choose an existing folder as workspace."
+          title={t('onboarding.workspaceChoice.openFolder')}
+          description={t('onboarding.workspaceChoice.openFolderDesc')}
           onClick={onOpenFolder}
         />
 
         <ChoiceCard
           icon={<Cloud className="h-5 w-5" />}
-          title="Connect to remote server"
-          description="Use a remote Craft Agent Server."
+          title={t('onboarding.workspaceChoice.connectRemote')}
+          description={t('onboarding.workspaceChoice.connectRemoteDesc')}
           onClick={onConnectRemote}
         />
       </div>

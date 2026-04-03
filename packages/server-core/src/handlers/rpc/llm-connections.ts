@@ -1,5 +1,5 @@
 import { RPC_CHANNELS, type LlmConnectionSetup } from '@craft-agent/shared/protocol'
-import { getLlmConnections, getLlmConnection, addLlmConnection, updateLlmConnection, deleteLlmConnection, getDefaultLlmConnection, setDefaultLlmConnection, touchLlmConnection, isCompatProvider, isAnthropicProvider, getDefaultModelsForConnection, getDefaultModelForConnection, type LlmConnection, type LlmConnectionWithStatus, toBedrockNativeId } from '@craft-agent/shared/config'
+import { getLlmConnections, getLlmConnection, addLlmConnection, updateLlmConnection, deleteLlmConnection, getDefaultLlmConnection, setDefaultLlmConnection, touchLlmConnection, isCompatProvider, isAnthropicProvider, getDefaultModelsForConnection, getDefaultModelForConnection, type LlmConnection, type LlmConnectionWithStatus, toBedrockNativeId, TWOPIXEL_BUILTIN_CONNECTION } from '@craft-agent/shared/config'
 import { getCredentialManager } from '@craft-agent/shared/credentials'
 import { setSetupDeferred } from '@craft-agent/shared/config/storage'
 import {
@@ -71,6 +71,15 @@ export function registerLlmConnectionsHandlers(server: RpcServer, deps: HandlerD
 
       const updates: Partial<LlmConnection> = {}
       const hasConfiguredBaseUrl = !!setup.baseUrl?.trim()
+      if (setup.slug === TWOPIXEL_BUILTIN_CONNECTION.slug) {
+        updates.providerType = TWOPIXEL_BUILTIN_CONNECTION.providerType
+        updates.authType = TWOPIXEL_BUILTIN_CONNECTION.authType
+        updates.baseUrl = TWOPIXEL_BUILTIN_CONNECTION.baseUrl
+        updates.customEndpoint = TWOPIXEL_BUILTIN_CONNECTION.customEndpoint
+        updates.piAuthProvider = TWOPIXEL_BUILTIN_CONNECTION.piAuthProvider
+        updates.models = TWOPIXEL_BUILTIN_CONNECTION.models
+        updates.defaultModel = TWOPIXEL_BUILTIN_CONNECTION.defaultModel
+      }
       if (setup.baseUrl !== undefined) {
         updates.baseUrl = setup.baseUrl?.trim() || undefined
 

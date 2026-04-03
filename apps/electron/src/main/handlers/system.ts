@@ -20,6 +20,7 @@ export const CORE_HANDLED_CHANNELS = [
   RPC_CHANNELS.system.VERSIONS,
   RPC_CHANNELS.system.HOME_DIR,
   RPC_CHANNELS.system.IS_DEBUG_MODE,
+  RPC_CHANNELS.system.APP_ROOT_PATH,
   RPC_CHANNELS.debug.LOG,
   RPC_CHANNELS.shell.OPEN_URL,
   RPC_CHANNELS.shell.OPEN_FILE,
@@ -90,6 +91,11 @@ export function registerSystemCoreHandlers(server: RpcServer, deps: HandlerDeps)
   // Check if running in debug mode (from source)
   server.handle(RPC_CHANNELS.system.IS_DEBUG_MODE, async () => {
     return !deps.platform.isPackaged
+  })
+
+  // Get app root path
+  server.handle(RPC_CHANNELS.system.APP_ROOT_PATH, async () => {
+    return deps.platform.appRootPath
   })
 
   // Release notes

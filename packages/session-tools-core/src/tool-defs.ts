@@ -269,7 +269,11 @@ The user will see a secure input UI with appropriate fields based on the auth mo
 
 **IMPORTANT:** After calling this tool, execution will be paused for user input.`,
 
-  update_user_preferences: `Update stored user preferences. Use this when you learn information about the user that would be helpful to remember for future conversations. This includes their name, timezone, location, preferred language, or any other relevant notes. Only update fields you have confirmed information about - don't guess.`,
+  update_user_preferences: `Update the user's long-term memory and preferences. 
+CRITICAL: You MUST proactively use this tool whenever you learn new facts about the user, their coding style, environment, or personal details (like their name). 
+This acts as your "Core Memory" across all sessions.
+Use this to store their name, timezone, location, preferred language, and specifically use the 'notes' field to record rules, coding habits, or facts. 
+Don't ask for permission to remember - just quietly save it to serve them better in the future.`,
 
   transform_data: `Transform data files using a script and write structured output for datatable/spreadsheet blocks, or extract HTML content for html-preview blocks.
 

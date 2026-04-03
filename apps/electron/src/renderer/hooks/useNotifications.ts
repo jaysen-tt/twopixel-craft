@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Notifications Hook
  *
  * Handles native OS notifications and badge Canvas rendering.
@@ -229,7 +236,7 @@ export function useNotifications({
     const title = session.name || 'New message'
 
     // Get message preview (truncate if needed)
-    let body = messagePreview || 'Craft Agent has a new message for you'
+    let body = messagePreview || 'TwoPixel has a new message for you'
     if (body.length > 100) {
       body = body.substring(0, 97) + '...'
     }

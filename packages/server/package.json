@@ -18,7 +18,7 @@
     "email": "support@craft.do"
   },
   "license": "MIT",
-  "homepage": "https://agents.craft.do",
+  "homepage": "https://agents.2pixel.cn",
   "scripts": {
     "start": "bun run src/index.ts",
     "generate-token": "bun run src/index.ts --generate-token",

@@ -1,4 +1,11 @@
 /**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
+/**
  * Session Types
  *
  * Types for workspace-scoped sessions.
@@ -215,7 +222,7 @@ export interface SessionHeader {
   id: string;
   /** SDK session ID (captured after first message) */
   sdkSessionId?: string;
-  /** Workspace root path (stored as portable path, e.g., ~/.craft-agent/...) */
+  /** Workspace root path (stored as portable path, e.g., ~/.twopixel/...) */
   workspaceRootPath: string;
   /** Optional user-defined name */
   name?: string;

@@ -105,6 +105,7 @@ if (isClientOnly) {
     webContentsId,
     autoReconnect: true,
     mode: 'local',
+    maxReconnectDelay: 2000, // fast reconnect for local server
     clientCapabilities: [...LOCAL_CLIENT_CAPABILITIES],
   })
 
@@ -403,6 +404,8 @@ client.onConnectionStateChanged((state) => {
 
 // App lifecycle — direct IPC (not WS RPC) since it restarts the server itself
 ;(api as ElectronAPI).relaunchApp = () => ipcRenderer.invoke('app:relaunch')
+;(api as ElectronAPI).getAutoLaunch = () => ipcRenderer.invoke('app:getAutoLaunch')
+;(api as ElectronAPI).setAutoLaunch = (enable: boolean) => ipcRenderer.invoke('app:setAutoLaunch', enable)
 ;(api as ElectronAPI).removeWorkspace = (workspaceId: string) => ipcRenderer.invoke('workspace:remove', workspaceId)
 ;(api as ElectronAPI).invokeOnServer = (url: string, token: string, channel: string, ...args: any[]) =>
   ipcRenderer.invoke('server:invokeOnServer', url, token, channel, ...args)

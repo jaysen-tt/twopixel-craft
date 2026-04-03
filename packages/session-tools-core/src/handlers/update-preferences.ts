@@ -61,9 +61,10 @@ export async function handleUpdatePreferences(
       updates.location = location;
     }
 
-    // Handle notes (replace)
+    // Handle notes (append instead of replace to build a long-term fact base)
     if (args.notes && typeof args.notes === 'string') {
       updates.notes = args.notes;
+      updates._appendNotes = true; // Signal to the upstream updater
     }
 
     // Check if anything was actually updated

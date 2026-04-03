@@ -1,16 +1,13 @@
 /**
- * PermissionsSettingsPage
- *
- * Displays permissions configuration for Explore mode.
- * Shows both default patterns (from ~/.craft-agent/permissions/default.json)
- * and custom workspace additions (from workspace permissions.json).
- *
- * Default patterns can be edited by the user in ~/.craft-agent/permissions/default.json.
- * Custom patterns can be edited via workspace permissions.json file.
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
  */
 
 import * as React from 'react'
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
@@ -36,7 +33,7 @@ export const meta: DetailsPageMeta = {
 }
 
 /**
- * Build default permissions data from ~/.craft-agent/permissions/default.json.
+ * Build default permissions data from ~/.twopixel/permissions/default.json.
  * These are the Explore mode patterns that can be customized by the user.
  * Patterns can include comments which are displayed in the table.
  *
@@ -130,25 +127,22 @@ function buildCustomPermissionsData(config: PermissionsConfigFile): PermissionRo
 }
 
 export default function PermissionsSettingsPage() {
+  const { t } = useTranslation()
   const { activeWorkspaceId } = useAppShellContext()
   const activeWorkspace = useActiveWorkspace()
 
-  // Loading and data state
   const [isLoading, setIsLoading] = useState(true)
   const [defaultConfig, setDefaultConfig] = useState<PermissionsConfigFile | null>(null)
   const [defaultPermissionsPath, setDefaultPermissionsPath] = useState<string | null>(null)
   const [customConfig, setCustomConfig] = useState<PermissionsConfigFile | null>(null)
 
-  // Build default permissions data from ~/.craft-agent/permissions/default.json
   const defaultPermissionsData = useMemo(() => buildDefaultPermissionsData(defaultConfig), [defaultConfig])
 
-  // Build custom permissions data from workspace permissions.json
   const customPermissionsData = useMemo(() => {
     if (!customConfig) return []
     return buildCustomPermissionsData(customConfig)
   }, [customConfig])
 
-  // Load both default and workspace permissions configs
   useEffect(() => {
     const loadPermissions = async () => {
       if (!window.electronAPI) {
@@ -158,12 +152,10 @@ export default function PermissionsSettingsPage() {
 
       setIsLoading(true)
       try {
-        // Load default permissions (app-level) - returns both config and path
         const { config: defaults, path: defaultsPath } = await window.electronAPI.getDefaultPermissionsConfig()
         setDefaultConfig(defaults)
         setDefaultPermissionsPath(defaultsPath)
 
-        // Load workspace permissions if we have an active workspace
         if (activeWorkspaceId) {
           const workspace = await window.electronAPI.getWorkspacePermissionsConfig(activeWorkspaceId)
           setCustomConfig(workspace)
@@ -193,7 +185,7 @@ export default function PermissionsSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Permissions" actions={<HeaderMenu route={routes.view.settings('permissions')} helpFeature="permissions" />} />
+      <PanelHeader title={t('infoPage.permissions')} actions={<HeaderMenu route={routes.view.settings('permissions')} helpFeature="permissions" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
@@ -204,8 +196,7 @@ export default function PermissionsSettingsPage() {
                 </div>
               ) : (
                 <>
-                  {/* About Section */}
-                  <SettingsSection title="About Permissions">
+                  <SettingsSection title={t('settings.permissionsSettings.aboutPermissions')}>
                     <SettingsCard className="px-4 py-3.5">
                       <div className="text-sm text-muted-foreground leading-relaxed space-y-1.5">
                         <p>
@@ -220,19 +211,17 @@ export default function PermissionsSettingsPage() {
                             onClick={() => window.electronAPI?.openUrl(getDocUrl('permissions'))}
                             className="text-foreground/70 hover:text-foreground underline underline-offset-2"
                           >
-                            Learn more
+                            {t('common.learnMore')}
                           </button>
                         </p>
                       </div>
                     </SettingsCard>
                   </SettingsSection>
 
-                  {/* Default Permissions Section */}
                   <SettingsSection
-                    title="Default Permissions"
-                    description="App-level patterns allowed in Explore mode. Commands not on this list are blocked."
+                    title={t('settings.permissionsSettings.defaultPermissions')}
+                    description={t('settings.permissionsSettings.appDefaultsDesc', 'App-level patterns allowed in Explore mode. Commands not on this list are blocked.')}
                     action={
-                      // EditPopover for AI-assisted default permissions editing
                       defaultPermissionsPath ? (
                         <EditPopover
                           trigger={<EditButton />}
@@ -252,26 +241,24 @@ export default function PermissionsSettingsPage() {
                           searchable
                           maxHeight={350}
                           fullscreen
-                          fullscreenTitle="Default Permissions"
+                          fullscreenTitle={t('settings.permissionsSettings.defaultPermissions')}
                         />
                       ) : (
                         <div className="p-8 text-center text-muted-foreground">
                           <p className="text-sm">No default permissions found.</p>
                           <p className="text-xs mt-1 text-foreground/40">
-                            Default permissions should be at <code className="bg-foreground/5 px-1 rounded">~/.craft-agent/permissions/default.json</code>
+                            Default permissions should be at <code className="bg-foreground/5 px-1 rounded">~/.twopixel/permissions/default.json</code>
                           </p>
                         </div>
                       )}
                     </SettingsCard>
                   </SettingsSection>
 
-                  {/* Custom Permissions Section */}
                   <SettingsSection
-                    title="Workspace Customizations"
-                    description="Workspace-level patterns that extend the app defaults above."
+                    title={t('settings.permissionsSettings.workspacePermissions')}
+                    description={t('settings.permissionsSettings.workspacePermissionsDesc', 'Workspace-level patterns that extend the app defaults above.')}
                     action={
                       (() => {
-                        // Get centralized edit config - all strings defined in EditPopover.tsx
                         const { context, example } = getEditConfig('workspace-permissions', activeWorkspace?.rootPath || '')
                         return (
                           <EditPopover
@@ -294,7 +281,7 @@ export default function PermissionsSettingsPage() {
                           searchable
                           maxHeight={350}
                           fullscreen
-                          fullscreenTitle="Workspace Customizations"
+                          fullscreenTitle={t('settings.permissionsSettings.workspaceCustomizations')}
                         />
                       ) : (
                         <div className="p-8 text-center text-muted-foreground">

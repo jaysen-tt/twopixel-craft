@@ -573,14 +573,14 @@ export function SessionFilesSection({ sessionId, className, sessionFolderPath, h
       {/* Header - matches sidebar styling with select-none, extra top padding for visual balance */}
       {!hideHeader && (
         <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 select-none">
-          <span className="text-xs font-medium text-muted-foreground">Session Files</span>
+          <span className="text-xs font-medium text-muted-foreground">会话文件 (Session Files)</span>
           {sessionFolderPath && (
             <button
               type="button"
               onClick={() => window.electronAPI.showInFolder(sessionFolderPath)}
               className="text-xs text-foreground/50 hover:text-foreground/80 hover:underline underline-offset-2 transition-colors"
             >
-              {`View in ${fileManagerName}`}
+              {`在 ${fileManagerName} 中查看`}
             </button>
           )}
         </div>

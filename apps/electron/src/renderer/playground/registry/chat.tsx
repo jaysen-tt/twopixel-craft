@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import * as React from 'react'
 import type { ComponentEntry } from './types'
 import { AttachmentPreview } from '@/components/app-shell/AttachmentPreview'
@@ -554,7 +561,7 @@ interface InputContainerPlaygroundProps {
 function InputContainerPlayground({
   disabled = false,
   isProcessing = false,
-  placeholder = 'Message Craft Agent...',
+  placeholder = 'Message TwoPixel...',
   currentModel = 'claude-sonnet-4-6',
   permissionMode = 'ask',
   workingDirectory = '/Users/demo/projects/craft-agent',
@@ -826,7 +833,7 @@ function ActiveTasksBarContext({ tasks = sampleBackgroundTasks }: ActiveTasksBar
 
         {/* Real InputContainer */}
         <InputContainer
-          placeholder="Message Craft Agent..."
+          placeholder="Message TwoPixel..."
           disabled={false}
           isProcessing={false}
           currentModel="claude-sonnet-4-6"
@@ -929,7 +936,7 @@ function PermissionInputToggle({ autoToggle = false, autoToggleInterval = 3000, 
 
       {/* Real InputContainer - handles animation automatically */}
       <InputContainer
-        placeholder="Message Craft Agent..."
+        placeholder="Message TwoPixel..."
         disabled={false}
         isProcessing={false}
         currentModel="claude-sonnet-4-6"
@@ -955,9 +962,9 @@ function PermissionInputToggle({ autoToggle = false, autoToggleInterval = 3000, 
 }
 
 // Generate variants for all hints dynamically
-const emptyStateHintVariants = Array.from({ length: getHintCount() }, (_, i) => ({
+const emptyStateHintVariants = Array.from({ length: getHintCount({ language: 'en-US' }) }, (_, i) => ({
   name: `Hint ${i + 1}`,
-  description: getHintTemplate(i).slice(0, 50) + '...',
+  description: getHintTemplate(i, { language: 'en-US' }).slice(0, 50) + '...',
   props: { hintIndex: i },
 }))
 
@@ -1064,9 +1071,9 @@ export const chatComponents: ComponentEntry[] = [
         control: {
           type: 'select',
           options: [
-            { label: 'Safe Mode', value: 'safe' },
-            { label: 'Ask Permission', value: 'ask' },
-            { label: 'Allow All', value: 'allow-all' },
+            { label: '探索 (Explore)', value: 'safe' },
+            { label: '询问编辑 (Ask to Edit)', value: 'ask' },
+            { label: '执行 (Execute)', value: 'allow-all' },
           ],
         },
         defaultValue: 'ask',
@@ -1281,7 +1288,7 @@ export const chatComponents: ComponentEntry[] = [
         name: 'placeholder',
         description: 'Textarea placeholder text',
         control: { type: 'string', placeholder: 'Message...' },
-        defaultValue: 'Message Craft Agent...',
+        defaultValue: 'Message TwoPixel...',
       },
       {
         name: 'currentModel',
@@ -1302,9 +1309,9 @@ export const chatComponents: ComponentEntry[] = [
         control: {
           type: 'select',
           options: [
-            { label: 'Safe (read-only)', value: 'safe' },
-            { label: 'Ask (prompt)', value: 'ask' },
-            { label: 'Allow All', value: 'allow-all' },
+            { label: '探索 (Explore)', value: 'safe' },
+            { label: '询问编辑 (Ask to Edit)', value: 'ask' },
+            { label: '执行 (Execute)', value: 'allow-all' },
           ],
         },
         defaultValue: 'ask',

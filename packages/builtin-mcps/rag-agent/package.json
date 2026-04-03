@@ -1,0 +1,19 @@
+{
+  "name": "rag-agent",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/fs-extra": "^11.0.4",
+    "chromadb": "^3.4.0",
+    "fs-extra": "^11.3.4",
+    "zod": "^4.3.6"
+  }
+}

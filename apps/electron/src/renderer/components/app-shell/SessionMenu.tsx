@@ -20,6 +20,7 @@
  */
 
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Archive,
   ArchiveRestore,
@@ -98,6 +99,7 @@ export function SessionMenu({
   const sessionId = item.id
   const isFlagged = item.isFlagged ?? false
   const isArchived = item.isArchived ?? false
+  const { t } = useTranslation()
   const sharedUrl = item.sharedUrl
   const currentSessionStatus = getSessionStatus(item)
   const sessionLabels = item.labels ?? []
@@ -174,13 +176,13 @@ export function SessionMenu({
       {!sharedUrl ? (
         <MenuItem onClick={handleShare}>
           <CloudUpload className="h-3.5 w-3.5" />
-          <span className="flex-1">Share</span>
+          <span className="flex-1">{t('sidebar.menu.share')}</span>
         </MenuItem>
       ) : (
         <Sub>
           <SubTrigger className="pr-2">
             <CloudUpload className="h-3.5 w-3.5" />
-            <span className="flex-1">Shared</span>
+            <span className="flex-1">{t('sidebar.menu.shared')}</span>
           </SubTrigger>
           <SubContent>
             <ShareMenuItems sessionId={sessionId} sharedUrl={sharedUrl} menu={{ MenuItem, Separator }} />
@@ -192,7 +194,7 @@ export function SessionMenu({
       {hasRemoteWorkspaces && onSendToWorkspace && (
         <MenuItem onClick={onSendToWorkspace}>
           <Send className="h-3.5 w-3.5" />
-          <span className="flex-1">Send to Workspace...</span>
+          <span className="flex-1">{t('sidebar.menu.sendToWorkspace')}</span>
         </MenuItem>
       )}
 
@@ -209,7 +211,7 @@ export function SessionMenu({
                 : icon
             })()}
           </span>
-          <span className="flex-1">Status</span>
+          <span className="flex-1">{t('sidebar.menu.status')}</span>
         </SubTrigger>
         <SubContent>
           <StatusMenuItems
@@ -226,7 +228,7 @@ export function SessionMenu({
         <Sub>
           <SubTrigger className="pr-2">
             <Tag className="h-3.5 w-3.5" />
-            <span className="flex-1">Labels</span>
+            <span className="flex-1">{t('sidebar.menu.labels')}</span>
             {sessionLabels.length > 0 && (
               <span className="text-[10px] text-muted-foreground tabular-nums -mr-2.5">
                 {sessionLabels.length}
@@ -248,12 +250,12 @@ export function SessionMenu({
       {!isFlagged ? (
         <MenuItem onClick={onFlag}>
           <Flag className="h-3.5 w-3.5 text-info" />
-          <span className="flex-1">Flag</span>
+          <span className="flex-1">{t('sidebar.menu.flag')}</span>
         </MenuItem>
       ) : (
         <MenuItem onClick={onUnflag}>
           <FlagOff className="h-3.5 w-3.5" />
-          <span className="flex-1">Unflag</span>
+          <span className="flex-1">{t('sidebar.menu.unflag')}</span>
         </MenuItem>
       )}
 
@@ -261,12 +263,12 @@ export function SessionMenu({
       {!isArchived ? (
         <MenuItem onClick={onArchive}>
           <Archive className="h-3.5 w-3.5" />
-          <span className="flex-1">Archive</span>
+          <span className="flex-1">{t('sidebar.menu.archive')}</span>
         </MenuItem>
       ) : (
         <MenuItem onClick={onUnarchive}>
           <ArchiveRestore className="h-3.5 w-3.5" />
-          <span className="flex-1">Unarchive</span>
+          <span className="flex-1">{t('sidebar.menu.unarchive')}</span>
         </MenuItem>
       )}
 
@@ -274,7 +276,7 @@ export function SessionMenu({
       {!_hasUnread && _hasMessages && (
         <MenuItem onClick={onMarkUnread}>
           <MailOpen className="h-3.5 w-3.5" />
-          <span className="flex-1">Mark as Unread</span>
+          <span className="flex-1">{t('sidebar.menu.markUnread')}</span>
         </MenuItem>
       )}
 
@@ -283,13 +285,13 @@ export function SessionMenu({
       {/* Rename */}
       <MenuItem onClick={onRename}>
         <Pencil className="h-3.5 w-3.5" />
-        <span className="flex-1">Rename</span>
+        <span className="flex-1">{t('sidebar.menu.rename')}</span>
       </MenuItem>
 
       {/* Regenerate Title - AI-generate based on recent messages */}
       <MenuItem onClick={handleRefreshTitle}>
         <RefreshCw className="h-3.5 w-3.5" />
-        <span className="flex-1">Regenerate Title</span>
+        <span className="flex-1">{t('sidebar.menu.regenerateTitle')}</span>
       </MenuItem>
 
       <Separator />
@@ -297,25 +299,25 @@ export function SessionMenu({
       {/* Open in New Panel */}
       <MenuItem onClick={handleOpenInNewPanel}>
         <Columns2 className="h-3.5 w-3.5" />
-        <span className="flex-1">Open in New Panel</span>
+        <span className="flex-1">{t('sidebar.menu.openInNewPanel')}</span>
       </MenuItem>
 
       {/* Open in New Window */}
       <MenuItem onClick={onOpenInNewWindow}>
         <AppWindow className="h-3.5 w-3.5" />
-        <span className="flex-1">Open in New Window</span>
+        <span className="flex-1">{t('sidebar.menu.openInNewWindow')}</span>
       </MenuItem>
 
       {/* Show in file manager */}
       <MenuItem onClick={handleShowInFinder}>
         <FolderOpen className="h-3.5 w-3.5" />
-        <span className="flex-1">{`Show in ${getFileManagerName()}`}</span>
+        <span className="flex-1">{t('sidebar.menu.showInFinder', { fileManager: getFileManagerName() })}</span>
       </MenuItem>
 
       {/* Copy Path */}
       <MenuItem onClick={handleCopyPath}>
         <Copy className="h-3.5 w-3.5" />
-        <span className="flex-1">Copy Path</span>
+        <span className="flex-1">{t('sidebar.menu.copyPath')}</span>
       </MenuItem>
 
       <Separator />
@@ -323,7 +325,7 @@ export function SessionMenu({
       {/* Delete */}
       <MenuItem onClick={onDelete} variant="destructive">
         <Trash2 className="h-3.5 w-3.5" />
-        <span className="flex-1">Delete</span>
+        <span className="flex-1">{t('sidebar.menu.delete')}</span>
       </MenuItem>
     </>
   )

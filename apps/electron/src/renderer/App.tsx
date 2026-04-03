@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import type { ThemeOverrides } from '@config/theme'
@@ -28,6 +35,7 @@ import { navigate, routes } from './lib/navigate'
 import { stripMarkdown } from './utils/text'
 import { getSessionsToRefreshAfterStaleReconnect } from './lib/reconnect-recovery'
 import { formatSessionLoadFailure, shouldTreatSessionLoadFailureAsTransportFallback } from './lib/session-load'
+import { getToken, isAuthenticated } from '@/lib/twopixel-auth'
 import { extractWorkspaceSlugFromPath } from '@craft-agent/shared/utils/workspace-slug'
 import { DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
 import { initRendererPerf } from './lib/perf'
@@ -61,6 +69,7 @@ import {
 import { useLinkInterceptor, type FilePreviewState } from '@/hooks/useLinkInterceptor'
 import { useTransportConnectionState } from '@/hooks/useTransportConnectionState'
 import { useStaleSessionRecovery } from '@/hooks/useStaleSessionRecovery'
+import { waitForTransportConnected } from './lib/transport-wait'
 import { TransportConnectionBanner, shouldShowTransportConnectionBanner } from '@/components/app-shell/TransportConnectionBanner'
 import { getFileManagerName } from '@/lib/platform'
 import { ActionRegistryProvider } from '@/actions'
@@ -70,6 +79,46 @@ type AppState = 'loading' | 'onboarding' | 'reauth' | 'workspace-picker' | 'read
 
 /** Type for the Jotai store returned by useStore() */
 type JotaiStore = ReturnType<typeof getDefaultStore>
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      reject(new Error(message))
+    }, timeoutMs)
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout)
+        resolve(value)
+      },
+      (error) => {
+        window.clearTimeout(timeout)
+        reject(error)
+      }
+    )
+  })
+}
+
+async function ensureTwoPixelBuiltInCredential(): Promise<void> {
+  const token = getToken()
+  if (!token) return
+
+  try {
+    await window.electronAPI.setupLlmConnection({
+      slug: 'twopixel-built-in',
+      credential: token,
+    })
+  } catch (error) {
+    console.warn('[TwoPixel] Failed to sync built-in LLM credential:', error)
+  }
+}
+
+function clearTwoPixelAuthState(): void {
+  localStorage.removeItem('twopixel_token')
+  localStorage.removeItem('twopixel_user')
+  localStorage.removeItem('twopixel_balance')
+  localStorage.removeItem('twopixel_is_admin')
+}
 
 /**
  * Helper to handle background task events from the agent.
@@ -234,11 +283,12 @@ export default function App() {
   }, [windowWorkspaceId, workspaces])
 
   // Get initial sessionId and focused mode from URL params (for "Open in New Window" feature)
-  const { initialSessionId, isFocusedMode } = useMemo(() => {
+  const { initialSessionId, isFocusedMode, initialWorkspaceId } = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return {
       initialSessionId: params.get('sessionId'),
       isFocusedMode: params.get('focused') === 'true',
+      initialWorkspaceId: params.get('workspaceId'),
     }
   }, [])
 
@@ -420,7 +470,12 @@ export default function App() {
     setSessionLoadError(null)
 
     try {
-      const loadedSessions = await window.electronAPI.getSessions()
+      await waitForTransportConnected(window.electronAPI, { timeoutMs: 8000 })
+      const loadedSessions = await withTimeout(
+        window.electronAPI.getSessions(),
+        12000,
+        'Timed out while loading sessions'
+      )
 
       // Initialize per-session atoms and metadata map
       // NOTE: No sessionsAtom used - sessions are only in per-session atoms
@@ -566,6 +621,7 @@ export default function App() {
     onComplete: handleOnboardingComplete,
     onConfigSaved: refreshLlmConnections,
     initialSetupNeeds: setupNeeds || undefined,
+    initialStep: isAuthenticated() ? 'provider-select' : 'login',
   })
 
   // Reauth login handler - placeholder (reauth is not currently used)
@@ -589,34 +645,43 @@ export default function App() {
   useEffect(() => {
     const initialize = async () => {
       try {
+        // Check TwoPixel authentication first
+        const isLoggedIn = isAuthenticated()
+        
+        if (!isLoggedIn) {
+          // User not logged in - show login step in onboarding
+          onboarding.reset('login')
+          setAppState('onboarding')
+          return
+        }
+
+        await ensureTwoPixelBuiltInCredential()
+
+        // User is logged in - go directly to main app
         // Get this window's workspace ID (passed via URL query param from main process)
-        const wsId = await window.electronAPI.getWindowWorkspace()
+        const wsId = initialWorkspaceId ?? await withTimeout(
+          window.electronAPI.getWindowWorkspace(),
+          3000,
+          'Timed out while resolving window workspace'
+        ).catch(() => null)
         setWindowWorkspaceId(wsId)
 
-        const needs = await window.electronAPI.getSetupNeeds()
-        setSetupNeeds(needs)
-
-        if (needs.isFullyConfigured) {
-          // If no workspace is selected (thin client without CRAFT_WORKSPACE_ID),
-          // show workspace picker before entering the main app
-          if (!wsId) {
-            setAppState('workspace-picker')
-          } else {
-            setAppState('ready')
-          }
+        // Skip onboarding for logged-in users - go directly to main app
+        if (!wsId) {
+          setAppState('workspace-picker')
         } else {
-          // New user or needs setup - show onboarding
-          setAppState('onboarding')
+          setAppState('ready')
         }
       } catch (error) {
         console.error('Failed to check auth state:', error)
         // If check fails, show onboarding to be safe
+        onboarding.reset('login')
         setAppState('onboarding')
       }
     }
 
     initialize()
-  }, [])
+  }, [initialWorkspaceId, onboarding, setWindowWorkspaceId])
 
   // Session selection state
   const [sessionSelection, setSession] = useSession()
@@ -1491,10 +1556,34 @@ export default function App() {
     setShowResetDialog(true)
   }, [])
 
+  // Execute logout directly (no confirmation dialog)
+  const handleLogout = useCallback(async () => {
+    try {
+      clearTwoPixelAuthState()
+      await window.electronAPI.logout()
+      // Reset all state
+      initializeSessions([])
+      setWorkspaces([])
+      setWindowWorkspaceId(null)
+      // Reset setupNeeds to force fresh onboarding start
+      setSetupNeeds({
+        needsBillingConfig: true,
+        needsCredentials: true,
+        isFullyConfigured: false,
+      })
+      // Reset onboarding hook state
+      onboarding.reset('login')
+      setAppState('onboarding')
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }, [onboarding, initializeSessions])
+
   // Execute reset after user confirms in dialog
   const executeReset = useCallback(async () => {
     try {
-      await window.electronAPI.logout()
+      clearTwoPixelAuthState()
+      await window.electronAPI.resetApp()
       // Reset all state
       // Clear session atoms - initialize with empty array clears all per-session atoms
       initializeSessions([])
@@ -1507,7 +1596,7 @@ export default function App() {
         isFullyConfigured: false,
       })
       // Reset onboarding hook state
-      onboarding.reset()
+      onboarding.reset('login')
       setAppState('onboarding')
     } catch (error) {
       console.error('Reset failed:', error)
@@ -1630,6 +1719,7 @@ export default function App() {
     onOpenKeyboardShortcuts: handleOpenKeyboardShortcuts,
     onOpenStoredUserPreferences: handleOpenStoredUserPreferences,
     onReset: handleReset,
+    onLogout: handleLogout,
     // Session options
     onSessionOptionsChange: handleSessionOptionsChange,
     onInputChange: handleInputChange,
@@ -1754,6 +1844,10 @@ export default function App() {
             onUseGitBashPath={onboarding.handleUseGitBashPath}
             onRecheckGitBash={onboarding.handleRecheckGitBash}
             onClearError={onboarding.handleClearError}
+            onLoginSuccess={onboarding.handleLoginSuccess}
+            onRegisterSuccess={onboarding.handleRegisterSuccess}
+            onSwitchToLogin={onboarding.handleSwitchToLogin}
+            onSwitchToRegister={onboarding.handleSwitchToRegister}
           />
         </ModalProvider>
       </DismissibleLayerProvider>
@@ -1821,19 +1915,21 @@ export default function App() {
                 onRetry={handleReconnectTransport}
               />
             )}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 relative">
               {sessionLoadError ? (
                 <SessionLoadErrorScreen
                   message={sessionLoadError}
                   onRetry={() => { void loadSessionsFromServer() }}
                 />
               ) : (
-                <AppShell
-                  contextValue={appShellContextValue}
-                  defaultLayout={[20, 32, 48]}
-                  menuNewChatTrigger={menuNewChatTrigger}
-                  isFocusedMode={isFocusedMode}
-                />
+                <div className="absolute inset-0">
+                  <AppShell
+                    contextValue={appShellContextValue}
+                    defaultLayout={[20, 32, 48]}
+                    menuNewChatTrigger={menuNewChatTrigger}
+                    isFocusedMode={isFocusedMode}
+                  />
+                </div>
               )}
             </div>
             <ResetConfirmationDialog

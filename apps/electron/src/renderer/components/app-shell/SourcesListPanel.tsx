@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { DatabaseZap } from 'lucide-react'
 import { SourceAvatar } from '@/components/ui/source-avatar'
 import { deriveConnectionStatus } from '@/components/ui/source-status-indicator'
@@ -51,6 +52,8 @@ export function SourcesListPanel({
   localMcpEnabled = true,
   className,
 }: SourcesListPanelProps) {
+  const { t } = useTranslation()
+  
   const filteredSources = React.useMemo(() => {
     if (!sourceFilter) return sources
     return sources.filter(s => s.config.type === sourceFilter.sourceType)
@@ -58,10 +61,10 @@ export function SourcesListPanel({
 
   const emptyMessage = React.useMemo(() => {
     if (sourceFilter?.kind === 'type') {
-      return `No ${SOURCE_TYPE_FILTER_LABELS[sourceFilter.sourceType] ?? sourceFilter.sourceType} sources configured.`
+      return t('sources.noSourcesOfType', { type: SOURCE_TYPE_FILTER_LABELS[sourceFilter.sourceType] ?? sourceFilter.sourceType })
     }
-    return 'No sources configured.'
-  }, [sourceFilter])
+    return t('sources.noSourcesConfigured')
+  }, [sourceFilter, t])
 
   return (
     <EntityPanel<LoadedSource>
@@ -75,7 +78,7 @@ export function SourcesListPanel({
         <EntityListEmptyScreen
           icon={<DatabaseZap />}
           title={emptyMessage}
-          description="Sources connect your agent to external data — MCP servers, REST APIs, and local folders."
+          description={t('sources.sourcesDesc')}
           docKey="sources"
         >
           {workspaceRootPath && (
@@ -83,7 +86,7 @@ export function SourcesListPanel({
               align="center"
               trigger={
                 <button className="inline-flex items-center h-7 px-3 text-xs font-medium rounded-[8px] bg-background shadow-minimal hover:bg-foreground/[0.03] transition-colors">
-                  Add Source
+                  {t('sources.addSource')}
                 </button>
               }
               {...getEditConfig(

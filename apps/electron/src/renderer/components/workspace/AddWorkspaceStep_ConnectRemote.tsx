@@ -1,3 +1,10 @@
+/**
+ * Note: This file has been modified by TwoPixel Team (2026).
+ * (Not the official Craft version / 非 Craft 官方原版)
+ * Original project: Craft Agents OSS (https://github.com/craftdocs/craft-agents)
+ * Licensed under the Apache License, Version 2.0.
+ */
+
 import { useState, useEffect, useCallback, useRef } from "react"
 import { ArrowLeft, CheckCircle, XCircle, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -145,7 +152,7 @@ export function AddWorkspaceStep_ConnectRemote({
     }
 
     if (!homeDir) return
-    const defaultBasePath = `${homeDir}/.craft-agent/workspaces`
+    const defaultBasePath = `${homeDir}/.twopixel/workspaces`
 
     if (isCreateNew || isFreshServer) {
       // Create new workspace on remote server via direct RPC, then connect locally
