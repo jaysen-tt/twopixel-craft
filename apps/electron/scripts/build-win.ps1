@@ -374,7 +374,7 @@ while (-not $builderSuccess -and $builderRetry -lt $maxBuilderRetries) {
         Start-Sleep -Seconds 1
     }
 
-    npx electron-builder --win --x64 2>&1 | Tee-Object -Variable builderOutput
+    npx electron-builder --config electron-builder.yml --win --x64 2>&1 | Tee-Object -Variable builderOutput
 
     if ($LASTEXITCODE -eq 0) {
         $builderSuccess = $true
