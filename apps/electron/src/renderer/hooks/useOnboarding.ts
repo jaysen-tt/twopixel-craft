@@ -836,7 +836,10 @@ export function useOnboarding({
       }
       
       // Relaunch the app to cleanly initialize the user's isolated workspace/sessions
-      if ((window.electronAPI as any).relaunch) {
+      // In dev mode, relaunch() kills the Vite dev server process, so we just reload the window
+      if (import.meta.env.DEV) {
+        window.location.reload()
+      } else if ((window.electronAPI as any).relaunch) {
         await (window.electronAPI as any).relaunch()
       } else {
         onComplete()
@@ -865,7 +868,10 @@ export function useOnboarding({
       }
       
       // Relaunch the app to cleanly initialize the user's isolated workspace/sessions
-      if ((window.electronAPI as any).relaunch) {
+      // In dev mode, relaunch() kills the Vite dev server process, so we just reload the window
+      if (import.meta.env.DEV) {
+        window.location.reload()
+      } else if ((window.electronAPI as any).relaunch) {
         await (window.electronAPI as any).relaunch()
       } else {
         onComplete()

@@ -1581,7 +1581,10 @@ export default function App() {
     try {
       await clearTwoPixelAuthState()
       // Relaunch the app entirely to ensure a clean session state for the next user
-      if ((window.electronAPI as any).relaunch) {
+      // In dev mode, relaunch() kills the Vite dev server process, so we just reload the window
+      if (import.meta.env.DEV) {
+        window.location.reload()
+      } else if ((window.electronAPI as any).relaunch) {
         await (window.electronAPI as any).relaunch()
       } else {
         // Fallback: reset all state if relaunch is not available
@@ -1606,7 +1609,10 @@ export default function App() {
       await clearTwoPixelAuthState()
       await window.electronAPI.resetApp()
       // Relaunch app to apply reset
-      if ((window.electronAPI as any).relaunch) {
+      // In dev mode, relaunch() kills the Vite dev server process, so we just reload the window
+      if (import.meta.env.DEV) {
+        window.location.reload()
+      } else if ((window.electronAPI as any).relaunch) {
         await (window.electronAPI as any).relaunch()
       } else {
         initializeSessions([])

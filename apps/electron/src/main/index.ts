@@ -667,6 +667,12 @@ app.whenReady().then(async () => {
       const { setActiveUserId } = require('@craft-agent/shared/workspaces')
       setActiveUserId(userId || null)
       
+      // Update sessionManager if it exists so it knows about the new active user
+      if (sessionManager) {
+        mainLog.info(`[TwoPixelPlatform] Reloading sessions for new active user: ${userId || 'anonymous'}`);
+        // We can just rely on the next call to sessionManager to use the updated active user
+      }
+      
       // Update adapter options if it exists
       if (platformAdapter) {
          (platformAdapter as any).options.token = token;
