@@ -211,7 +211,7 @@ export function registerSystemCoreHandlers(server: RpcServer, deps: HandlerDeps)
   server.handle('system:install-git-bash', async () => {
     return new Promise((resolveResolve) => {
       try {
-        const downloadUrl = 'https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe'
+        const downloadUrl = 'https://npmmirror.com/mirrors/git-for-windows/v2.45.2.windows.1/Git-2.45.2-64-bit.exe'
         const installerPath = join(tmpdir(), 'git-installer.exe')
         
         const fileStream = createWriteStream(installerPath)

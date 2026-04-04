@@ -38,7 +38,7 @@ CheckGitHKCU:
 
 NeedInstallGit:
   DetailPrint "Downloading Git for Windows (this may take a moment)..."
-  inetc::get "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe" "$PLUGINSDIR\git-installer.exe"
+  inetc::get "https://npmmirror.com/mirrors/git-for-windows/v2.45.2.windows.1/Git-2.45.2-64-bit.exe" "$PLUGINSDIR\git-installer.exe"
   Pop $R0
   StrCmp $R0 "OK" +3
     DetailPrint "Download failed: $R0"
