@@ -26,14 +26,13 @@ export function initLocalAiManager() {
     if (platform === 'win32') binName = 'llama-server.exe'
     
     // In dev, point to resources/bin
-    // In prod, point to resources/app.asar.unpacked/bin or process.resourcesPath/bin
-    const resourcesPath = isDev 
-      ? path.join(__dirname, '../../resources/bin') 
-      : path.join(process.resourcesPath, 'bin')
+    // In prod, point to process.resourcesPath/app.asar.unpacked/resources/bin
+    const resourcesBase = isDev 
+      ? path.join(__dirname, '../../resources') 
+      : path.join(process.resourcesPath, 'app.asar.unpacked', 'resources')
       
-    // Ideally we'd have platform specific folders (win, mac-arm64, mac-x64)
-    // For now we just assume it's in bin folder
-    return path.join(resourcesPath, binName)
+    const platformKey = `${platform}-${arch}`
+    return path.join(resourcesBase, 'bin', platformKey, binName)
   }
 
   ipcMain.handle('local-ai:checkModel', async (event, modelId: string) => {
