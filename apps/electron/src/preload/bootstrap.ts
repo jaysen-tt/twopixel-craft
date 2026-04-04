@@ -422,6 +422,7 @@ import * as os from 'os'
 
 ;(api as any).syncTwoPixelToken = (token: string | null, userId: string | null) => ipcRenderer.send('__sync-twopixel-token', token, userId)
 ;(api as any).getTotalMem = () => os.totalmem()
+;(api as any).installGitBash = () => ipcRenderer.invoke('system:install-git-bash')
 ;(api as any).checkLocalAiModel = (modelId: string) => ipcRenderer.invoke('local-ai:checkModel', modelId)
 ;(api as any).downloadLocalAiModel = (modelId: string, url: string) => ipcRenderer.invoke('local-ai:downloadModel', modelId, url)
 ;(api as any).cancelLocalAiDownload = (modelId: string) => ipcRenderer.invoke('local-ai:cancelDownload', modelId)

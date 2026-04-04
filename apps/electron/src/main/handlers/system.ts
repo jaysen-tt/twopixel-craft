@@ -1,7 +1,11 @@
 import { resolve } from 'path'
 import { join } from 'path'
-import { homedir } from 'os'
-import { execSync } from 'child_process'
+import { homedir, tmpdir } from 'os'
+import { execSync, execFile } from 'child_process'
+import { createWriteStream } from 'fs'
+import { rm } from 'fs/promises'
+import { pipeline } from 'stream/promises'
+import { get as httpsGet } from 'https'
 import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
 import { getGitBashPath, setGitBashPath, clearGitBashPath } from '@craft-agent/shared/config'
 import { isUsableGitBashPath, validateGitBashPath } from '@craft-agent/server-core/services'
@@ -31,6 +35,7 @@ export const CORE_HANDLED_CHANNELS = [
   RPC_CHANNELS.gitbash.CHECK,
   RPC_CHANNELS.gitbash.BROWSE,
   RPC_CHANNELS.gitbash.SET_PATH,
+  'system:install-git-bash',
 ] as const
 
 export const GUI_HANDLED_CHANNELS = [
@@ -200,6 +205,56 @@ export function registerSystemCoreHandlers(server: RpcServer, deps: HandlerDeps)
     setGitBashPath(validation.path)
     process.env.CLAUDE_CODE_GIT_BASH_PATH = validation.path
     return { success: true }
+  })
+
+  // Install Git Bash silently
+  server.handle('system:install-git-bash', async () => {
+    return new Promise((resolveResolve) => {
+      try {
+        const downloadUrl = 'https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/Git-2.45.2-64-bit.exe'
+        const installerPath = join(tmpdir(), 'git-installer.exe')
+        
+        const fileStream = createWriteStream(installerPath)
+        
+        // Handle redirects manually since https.get doesn't follow them automatically
+        const download = (url: string) => {
+          httpsGet(url, (response) => {
+            if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+              download(response.headers.location)
+              return
+            }
+            
+            if (response.statusCode !== 200) {
+              resolveResolve({ success: false, error: `Download failed with status ${response.statusCode}` })
+              return
+            }
+
+            response.pipe(fileStream)
+
+            fileStream.on('finish', () => {
+              fileStream.close(() => {
+                // Execute installer silently
+                const child = execFile(installerPath, ['/VERYSILENT', '/NORESTART', '/NOCANCEL', '/SP-', '/CLOSEAPPLICATIONS', '/RESTARTAPPLICATIONS', '/COMPONENTS="icons,ext\\reg\\shellhere,assoc,assoc_sh"'], (error) => {
+                  rm(installerPath, { force: true }).catch(() => {})
+                  if (error) {
+                    resolveResolve({ success: false, error: `Install failed: ${error.message}` })
+                  } else {
+                    resolveResolve({ success: true })
+                  }
+                })
+              })
+            })
+          }).on('error', (err) => {
+            rm(installerPath, { force: true }).catch(() => {})
+            resolveResolve({ success: false, error: `Download error: ${err.message}` })
+          })
+        }
+        
+        download(downloadUrl)
+      } catch (err: any) {
+        resolveResolve({ success: false, error: err.message })
+      }
+    })
   })
 
   // Debug logging from renderer -> main log file (fire-and-forget, no response)
