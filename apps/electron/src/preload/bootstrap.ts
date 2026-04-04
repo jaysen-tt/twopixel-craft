@@ -418,6 +418,37 @@ client.onConnectionStateChanged((state) => {
 })
 
 // Sync token to main process adapter
+import * as os from 'os'
+
 ;(api as any).syncTwoPixelToken = (token: string | null) => ipcRenderer.send('__sync-twopixel-token', token)
+;(api as any).getTotalMem = () => os.totalmem()
+;(api as any).checkLocalAiModel = (modelId: string) => ipcRenderer.invoke('local-ai:checkModel', modelId)
+;(api as any).downloadLocalAiModel = (modelId: string, url: string) => ipcRenderer.invoke('local-ai:downloadModel', modelId, url)
+;(api as any).cancelLocalAiDownload = (modelId: string) => ipcRenderer.invoke('local-ai:cancelDownload', modelId)
+;(api as any).getLocalAiDownloadState = (modelId: string) => ipcRenderer.invoke('local-ai:getDownloadState', modelId)
+;(api as any).startLocalAiEngine = (modelId: string) => ipcRenderer.invoke('local-ai:startEngine', modelId)
+;(api as any).stopLocalAiEngine = () => ipcRenderer.invoke('local-ai:stopEngine')
+;(api as any).onLocalAiDownloadProgress = (callback: (event: any, modelId: string, data: { downloaded: number, total: number }) => void) => {
+  const handler = (event: any, data: any) => {
+    // The channel contains the modelId: local-ai:downloadProgress:modelId
+    // We can extract it, but it's simpler to just let the callback know.
+    // Actually, ipcRenderer.on listens to specific channels.
+  }
+  // This needs to be a bit more robust if handling multiple models, but for now we'll export a generic listener adder.
+}
+// Expose a function to add a specific listener
+;(api as any).addLocalAiDownloadListener = (modelId: string, callback: (data: { downloaded: number, total: number }) => void) => {
+  const channel = `local-ai:downloadProgress:${modelId}`
+  // Use a named function so we can remove exactly this listener
+  const handler = (_event: any, data: any) => callback(data)
+  
+  // Remove existing listeners for this channel to prevent duplication
+  ipcRenderer.removeAllListeners(channel)
+  
+  ipcRenderer.on(channel, handler)
+  return () => {
+    ipcRenderer.removeListener(channel, handler)
+  }
+}
 
 contextBridge.exposeInMainWorld('electronAPI', api)

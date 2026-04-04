@@ -576,6 +576,111 @@ export default function AiSettingsPage() {
   const [extendedPromptCache, setExtendedPromptCache] = useState(false)
   const [enable1MContext, setEnable1MContext] = useState(true)
 
+  // Local AI Lab State
+  const [totalMem, setTotalMem] = useState<number>(0)
+  const [localAiEnabled, setLocalAiEnabled] = useState(false)
+  const [isModelReady, setIsModelReady] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState(0)
+  const memGB = useMemo(() => Math.round(totalMem / (1024 * 1024 * 1024)), [totalMem])
+  const recommendedModel = memGB >= 16 ? 'gemma-4-9b-it-q4' : 'gemma-4-e2b-it-q4'
+
+  // Add listener for download progress
+  useEffect(() => {
+    if (!window.electronAPI) return
+    let unsub: (() => void) | undefined
+    if ((window.electronAPI as any).addLocalAiDownloadListener) {
+      unsub = (window.electronAPI as any).addLocalAiDownloadListener(recommendedModel, (data: { downloaded: number, total: number }) => {
+        const progress = Math.round((data.downloaded / data.total) * 100)
+        setDownloadProgress(progress)
+        if (data.downloaded > 0 && data.downloaded >= data.total) {
+          setIsDownloading(false)
+          setIsModelReady(true)
+        }
+      })
+    }
+    return () => {
+      if (unsub) unsub()
+    }
+  }, [recommendedModel])
+
+  // Check initial hardware, model status, and download state
+  useEffect(() => {
+    if (window.electronAPI) {
+      const getMem = async () => {
+        try {
+          if ((window.electronAPI as any).getTotalMemory) {
+            const mem = await (window.electronAPI as any).getTotalMemory()
+            setTotalMem(mem)
+          } else if ((window.electronAPI as any).getTotalMem) {
+            setTotalMem((window.electronAPI as any).getTotalMem())
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+      getMem()
+      
+      const checkModel = async () => {
+        try {
+          if ((window.electronAPI as any).checkLocalAiModel) {
+            const exists = await (window.electronAPI as any).checkLocalAiModel(recommendedModel)
+            setIsModelReady(exists)
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+      checkModel()
+
+      const checkDownloadState = async () => {
+        try {
+          if ((window.electronAPI as any).getLocalAiDownloadState) {
+            const state = await (window.electronAPI as any).getLocalAiDownloadState(recommendedModel)
+            if (state && state.isDownloading) {
+              setIsDownloading(true)
+              setDownloadProgress(state.progress || 0)
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+      checkDownloadState()
+    }
+  }, [recommendedModel])
+
+  useEffect(() => {
+    if (localAiEnabled && isModelReady && memGB >= 8) {
+      if (window.electronAPI && (window.electronAPI as any).startLocalAiEngine) {
+        (window.electronAPI as any).startLocalAiEngine(recommendedModel).then((res: any) => {
+          console.log('Local AI engine started:', res)
+        })
+      }
+    } else {
+      if (window.electronAPI && (window.electronAPI as any).stopLocalAiEngine) {
+        (window.electronAPI as any).stopLocalAiEngine()
+      }
+    }
+  }, [localAiEnabled, isModelReady, memGB, recommendedModel])
+
+  const handleDownloadModel = async () => {
+    if (!window.electronAPI) return
+    setIsDownloading(true)
+    setDownloadProgress(0)
+    
+    const url = `https://api.2pixel.cn/models/${recommendedModel}.gguf`
+
+    try {
+      await (window.electronAPI as any).downloadLocalAiModel(recommendedModel, url)
+      setIsModelReady(true)
+    } catch (e) {
+      console.error('Download failed', e)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   // Validation state per connection
   const [validationStates, setValidationStates] = useState<Record<string, {
     state: ValidationState
@@ -898,6 +1003,63 @@ export default function AiSettingsPage() {
             />
 
             <div className="space-y-8">
+              {/* Beta Local AI Lab */}
+              {memGB > 0 && (
+                <SettingsSection 
+                  title="Beta 本地 AI 实验室" 
+                  description="启用本地端侧模型处理隐私与长文本，降低云端 Token 消耗。智能体检系统已为您分配最佳杯型。"
+                >
+                  <SettingsCard>
+                    <SettingsToggle
+                      label="启用本地脏活处理引擎"
+                      description={
+                        memGB >= 16 
+                          ? `检测到您的电脑性能强劲 (${memGB}GB 内存)，推荐开启本地【中杯模型】 (Gemma 4 9B)，处理复杂逻辑毫无压力。` 
+                          : memGB >= 8
+                          ? `检测到您的设备为日常办公配置 (${memGB}GB 内存)，推荐开启本地【小杯模型】 (Gemma 4 E2B)，轻量运行不卡顿。`
+                          : `您的设备配置暂不满足本地模型要求 (${memGB}GB 内存)，已自动为您连接云端。`
+                      }
+                      checked={localAiEnabled}
+                      onCheckedChange={setLocalAiEnabled}
+                      disabled={memGB < 8 || !isModelReady}
+                    />
+                    
+                    {memGB >= 8 && !isModelReady && (
+                      <div className="px-4 pb-4 pt-1 flex items-center justify-between border-t border-border/40 mt-2">
+                        <div className="text-sm text-muted-foreground">
+                          {isDownloading 
+                            ? `正在下载本地模型... ${downloadProgress}%` 
+                            : '使用此功能需要先下载本地运行环境与模型权重'}
+                        </div>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={handleDownloadModel}
+                          disabled={isDownloading}
+                          className="h-8 text-xs bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20"
+                        >
+                          {isDownloading ? (
+                            <span className="flex items-center gap-2">
+                              <Spinner className="w-3 h-3 border-amber-600 border-t-transparent" />
+                              下载中
+                            </span>
+                          ) : (
+                            '立即下载'
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {memGB >= 8 && isModelReady && (
+                      <div className="px-4 pb-3 pt-2 flex items-center gap-2 border-t border-border/40 mt-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                        <CheckCircle2 className="w-4 h-4" />
+                        本地模型已就绪，可随时开启。
+                      </div>
+                    )}
+                  </SettingsCard>
+                </SettingsSection>
+              )}
+
               {/* Default Settings - only show if connections exist */}
               {llmConnections.length > 0 && (
               <SettingsSection title={t('settings.aiSettings.default')} description={t('settings.aiSettings.defaultDesc')}>
