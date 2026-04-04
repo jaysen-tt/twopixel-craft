@@ -112,7 +112,7 @@ async function ensureTwoPixelBuiltInCredential(): Promise<void> {
     
     // Sync token to main process platform adapter
     if ((window.electronAPI as any).syncTwoPixelToken) {
-      (window.electronAPI as any).syncTwoPixelToken(token, user.user_id)
+      await (window.electronAPI as any).syncTwoPixelToken(token, user.user_id)
     }
   } catch (error) {
     console.warn('[TwoPixel] Failed to sync built-in LLM credential:', error)
@@ -1579,7 +1579,7 @@ export default function App() {
   // Execute logout directly (no confirmation dialog)
   const handleLogout = useCallback(async () => {
     try {
-      clearTwoPixelAuthState()
+      await clearTwoPixelAuthState()
       // Relaunch the app entirely to ensure a clean session state for the next user
       if ((window.electronAPI as any).relaunch) {
         await (window.electronAPI as any).relaunch()
@@ -1603,7 +1603,7 @@ export default function App() {
   // Execute reset after user confirms in dialog
   const executeReset = useCallback(async () => {
     try {
-      clearTwoPixelAuthState()
+      await clearTwoPixelAuthState()
       await window.electronAPI.resetApp()
       // Relaunch app to apply reset
       if ((window.electronAPI as any).relaunch) {

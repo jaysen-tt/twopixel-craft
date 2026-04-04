@@ -48,7 +48,7 @@ import {
   downloadSourceIcon,
 } from '../sources/storage.ts';
 import { permissionsConfigCache, getAppPermissionsDir } from '../agent/permissions-config.ts';
-import { getWorkspacePath, getWorkspaceSourcesPath, getWorkspaceSkillsPath } from '../workspaces/storage.ts';
+import { getWorkspacePath, getWorkspaceSourcesPath, getWorkspaceSkillsPath, getWorkspaceSessionsPath } from '../workspaces/storage.ts';
 import type { LoadedSkill } from '../skills/types.ts';
 import { loadSkill, loadAllSkills, skillNeedsIconDownload, downloadSkillIcon } from '../skills/storage.ts';
 import {
@@ -456,7 +456,7 @@ export class ConfigWatcher {
     // Session metadata changes: sessions/{id}/session.jsonl
     // Detects external modifications (other instances, scripts, manual edits).
     // Only reads line 1 (header) — lightweight even during active streaming.
-    if (parts[0] === 'sessions' && parts.length >= 3) {
+    if (parts.length >= 3 && parts[0]?.startsWith('sessions')) {
       const sessionId = parts[1]!;
       const file = parts[2];
 
@@ -936,7 +936,8 @@ export class ConfigWatcher {
    * made by other instances, scripts, or manual edits.
    */
   private handleSessionMetadataChange(sessionId: string): void {
-    const sessionFile = join(this.workspaceDir, 'sessions', sessionId, 'session.jsonl');
+    const sessionsDir = getWorkspaceSessionsPath(this.workspaceDir);
+    const sessionFile = join(sessionsDir, sessionId, 'session.jsonl');
 
     if (!existsSync(sessionFile)) {
       return;

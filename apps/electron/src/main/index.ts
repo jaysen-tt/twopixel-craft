@@ -659,7 +659,7 @@ app.whenReady().then(async () => {
     // or renderer calling it, so we use a callback pattern from renderer instead.
     // We will listen for a token sync event from the renderer instead of trying to read localStorage here.
     let currentTwoPixelToken: string | null = null;
-    ipcMain.on('__sync-twopixel-token', (_event, token: string | null, userId?: string | null) => {
+    ipcMain.handle('__sync-twopixel-token', async (_event, token: string | null, userId?: string | null) => {
       currentTwoPixelToken = token;
       mainLog.info(`[TwoPixelPlatform] Synced token from renderer: ${token ? 'set' : 'cleared'}`);
       

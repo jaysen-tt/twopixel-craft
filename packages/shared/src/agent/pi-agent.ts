@@ -250,7 +250,8 @@ export class PiAgent extends BaseAgent {
 
     // Set session dir on adapter for concurrent-safe toolMetadataStore lookups
     if (config.session?.id && config.workspace.rootPath) {
-      this.adapter.setSessionDir(join(config.workspace.rootPath, 'sessions', config.session.id));
+      const { getWorkspaceSessionsPath } = require('../workspaces/storage.ts');
+      this.adapter.setSessionDir(join(getWorkspaceSessionsPath(config.workspace.rootPath), config.session.id));
     }
 
     if (!config.isHeadless) {
@@ -314,9 +315,11 @@ export class PiAgent extends BaseAgent {
 
     // Build session ID and session dir path upfront (used for spawn env + init command)
     const sessionId = this.config.session?.id || `agent-${Date.now()}`;
-    const sessionDir = this.config.session
-      ? join(this.config.workspace.rootPath, 'sessions', sessionId)
-      : undefined;
+    let sessionDir: string | undefined;
+    if (this.config.session) {
+      const { getWorkspaceSessionsPath } = require('../workspaces/storage.ts');
+      sessionDir = join(getWorkspaceSessionsPath(this.config.workspace.rootPath), sessionId);
+    }
 
     // Build spawn args — optionally preload the network interceptor
     // for tool metadata injection/capture across all API formats.

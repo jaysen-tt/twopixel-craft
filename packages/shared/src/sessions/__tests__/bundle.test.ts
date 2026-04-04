@@ -49,7 +49,8 @@ function makeStoredSession(overrides: Partial<StoredSession> = {}): StoredSessio
 }
 
 function setupSessionDir(workspaceRoot: string, session: StoredSession): string {
-  const sessionsDir = join(workspaceRoot, 'sessions', session.id)
+  const { getWorkspaceSessionsPath } = require('../../workspaces/storage.ts')
+  const sessionsDir = join(getWorkspaceSessionsPath(workspaceRoot), session.id)
   mkdirSync(sessionsDir, { recursive: true })
 
   // Write JSONL

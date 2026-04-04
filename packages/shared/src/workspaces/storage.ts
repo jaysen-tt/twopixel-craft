@@ -21,6 +21,7 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  renameSync,
 } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
@@ -71,6 +72,9 @@ export function getActiveUserId(): string | null {
 export function setActiveUserId(userId: string | null): void {
   cachedUserId = userId;
   try {
+    if (!existsSync(CONFIG_DIR)) {
+      mkdirSync(CONFIG_DIR, { recursive: true });
+    }
     const path = join(CONFIG_DIR, 'active_user.json');
     if (userId) {
       writeFileSync(path, JSON.stringify({ userId }));
@@ -122,7 +126,22 @@ export function getWorkspaceSourcesPath(rootPath: string): string {
 export function getWorkspaceSessionsPath(rootPath: string): string {
   const userId = getActiveUserId();
   if (userId) {
-    return join(rootPath, `sessions_${userId}`);
+    const newPath = join(rootPath, `sessions_${userId}`);
+    const oldPath = join(rootPath, 'sessions');
+
+    // Migration logic: If the user's specific sessions folder doesn't exist,
+    // but the generic 'sessions' folder does (from before multi-user isolation),
+    // we rename it to belong to this user to prevent data loss.
+    if (!existsSync(newPath) && existsSync(oldPath)) {
+      try {
+        renameSync(oldPath, newPath);
+        console.log(`[workspace-storage] Migrated old sessions folder to ${newPath}`);
+      } catch (e) {
+        console.error(`[workspace-storage] Failed to migrate sessions folder:`, e);
+      }
+    }
+
+    return newPath;
   }
   return join(rootPath, 'sessions');
 }

@@ -95,7 +95,7 @@ export async function fetchAuthorizedJson(endpoint: string): Promise<any> {
 
   if (!response.ok) {
     if (response.status === 401) {
-      logout()
+      await logout()
     }
     throw new Error(`Failed to fetch ${endpoint}`)
   }
@@ -130,7 +130,7 @@ export async function login(username: string, password: string): Promise<TwoPixe
       
       // Sync token to main process platform adapter
       if ((window as any).electronAPI?.syncTwoPixelToken) {
-        (window as any).electronAPI.syncTwoPixelToken(data.token, user.user_id)
+        await (window as any).electronAPI.syncTwoPixelToken(data.token, user.user_id)
       }
       
       return {
@@ -217,7 +217,7 @@ export async function register(
       
       // Sync token to main process platform adapter
       if ((window as any).electronAPI?.syncTwoPixelToken) {
-        (window as any).electronAPI.syncTwoPixelToken(token, user.user_id)
+        await (window as any).electronAPI.syncTwoPixelToken(token, user.user_id)
       }
       
       return {
@@ -273,24 +273,26 @@ export function isAuthenticated(): boolean {
 
     const payload = JSON.parse(atob(parts[1])) as TwoPixelTokenPayload
     if (payload.exp && payload.exp < Date.now() / 1000) {
-      logout()
+      logout() // Fire and forget in sync function
       return false
     }
 
     return true
   } catch {
+    // invalid token
+    logout() // Fire and forget in sync function
     return false
   }
 }
 
-export function logout(): void {
+export async function logout(): Promise<void> {
   localStorage.removeItem(TOKEN_STORAGE_KEY)
   localStorage.removeItem(USER_STORAGE_KEY)
   localStorage.removeItem(BALANCE_STORAGE_KEY)
   localStorage.removeItem(IS_ADMIN_STORAGE_KEY)
   
   if ((window as any).electronAPI?.syncTwoPixelToken) {
-    (window as any).electronAPI.syncTwoPixelToken(null, null)
+    await (window as any).electronAPI.syncTwoPixelToken(null, null)
   }
 }
 
