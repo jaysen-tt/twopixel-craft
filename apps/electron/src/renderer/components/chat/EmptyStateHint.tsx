@@ -14,12 +14,12 @@ interface ParsedHint {
 }
 
 const HINT_TEMPLATES_ZH = [
-  '总结您的 {source:Gmail} 收件箱，起草回复，并保存笔记到 {source:Craft}',
+  '总结您的 {source:Gmail} 收件箱，起草回复，并保存笔记到 {source:TwoPixel}',
   '将 {file:截图} 转换为您 {folder} 中的工作网站',
   '从 {source:Linear} 拉取问题，在 {source:Slack} 中研究，发布修复',
   '转录 {file:语音备忘录} 并转换为 {source:Notion} 任务',
   '分析 {file:电子表格} 并将洞察发布到 {source:Slack}',
-  '审查 {source:GitHub} PR，然后在 {source:Craft} 中总结更改',
+  '审查 {source:GitHub} PR，然后在 {source:TwoPixel} 中总结更改',
   '解析 {file:发票PDF} 并记录到 {source:Google Sheets}',
   '使用 {source:Exa} 研究，撰写报告，保存到您的 {source:Obsidian} 库',
   '重构您 {folder} 中的代码，然后推送到 {source:GitHub}',
@@ -32,12 +32,12 @@ const HINT_TEMPLATES_ZH = [
 ]
 
 const HINT_TEMPLATES_EN = [
-  'Summarize your {source:Gmail} inbox, draft replies, and save notes to {source:Craft}',
+  'Summarize your {source:Gmail} inbox, draft replies, and save notes to {source:TwoPixel}',
   'Turn a {file:screenshot} into a working website in your {folder}',
   'Pull issues from {source:Linear}, research in {source:Slack}, ship the fix',
   'Transcribe a {file:voice memo} and turn it into {source:Notion} tasks',
   'Analyze a {file:spreadsheet} and post insights to {source:Slack}',
-  'Review {source:GitHub} PRs, then summarize changes in {source:Craft}',
+  'Review {source:GitHub} PRs, then summarize changes in {source:TwoPixel}',
   'Parse an {file:invoice PDF} and log it to {source:Google Sheets}',
   'Research with {source:Exa}, write it up, save to your {source:Obsidian} vault',
   'Refactor code in your {folder}, then push to {source:GitHub}',
