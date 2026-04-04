@@ -28,7 +28,7 @@ export function initLocalAiManager() {
     // In dev, point to resources/bin
     // In prod, point to process.resourcesPath/app.asar.unpacked/resources/bin
     const resourcesBase = isDev 
-      ? path.join(__dirname, '../../resources') 
+      ? path.join(__dirname, '../resources') 
       : path.join(process.resourcesPath, 'app.asar.unpacked', 'resources')
       
     const platformKey = `${platform}-${arch}`
