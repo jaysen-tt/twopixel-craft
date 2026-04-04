@@ -58,7 +58,7 @@ export function getActiveUserId(): string | null {
     if (existsSync(path)) {
       const data = JSON.parse(readFileSync(path, 'utf8'));
       cachedUserId = data.userId || null;
-      return cachedUserId;
+      return cachedUserId || null;
     }
   } catch (e) {}
   cachedUserId = null;
