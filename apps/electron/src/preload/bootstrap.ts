@@ -420,12 +420,13 @@ client.onConnectionStateChanged((state) => {
 // Sync token to main process adapter
 import * as os from 'os'
 
-;(api as any).syncTwoPixelToken = (token: string | null) => ipcRenderer.send('__sync-twopixel-token', token)
+;(api as any).syncTwoPixelToken = (token: string | null, userId: string | null) => ipcRenderer.send('__sync-twopixel-token', token, userId)
 ;(api as any).getTotalMem = () => os.totalmem()
 ;(api as any).checkLocalAiModel = (modelId: string) => ipcRenderer.invoke('local-ai:checkModel', modelId)
 ;(api as any).downloadLocalAiModel = (modelId: string, url: string) => ipcRenderer.invoke('local-ai:downloadModel', modelId, url)
 ;(api as any).cancelLocalAiDownload = (modelId: string) => ipcRenderer.invoke('local-ai:cancelDownload', modelId)
 ;(api as any).getLocalAiDownloadState = (modelId: string) => ipcRenderer.invoke('local-ai:getDownloadState', modelId)
+;(api as any).relaunch = () => ipcRenderer.invoke('app:relaunch')
 ;(api as any).startLocalAiEngine = (modelId: string) => ipcRenderer.invoke('local-ai:startEngine', modelId)
 ;(api as any).stopLocalAiEngine = () => ipcRenderer.invoke('local-ai:stopEngine')
 ;(api as any).onLocalAiDownloadProgress = (callback: (event: any, modelId: string, data: { downloaded: number, total: number }) => void) => {

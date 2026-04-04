@@ -4,7 +4,7 @@ export interface ApiClientConfig {
 }
 
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseUrl: 'http://43.160.252.207:16686',
+  baseUrl: 'https://api.2pixel.cn',
   timeout: 30000,
 }
 

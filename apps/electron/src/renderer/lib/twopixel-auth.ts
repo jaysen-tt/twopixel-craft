@@ -47,7 +47,7 @@ const IS_ADMIN_STORAGE_KEY = 'twopixel_is_admin'
 
 function getBaseUrl(): string {
   const config = getApiClientConfig()
-  return config.baseUrl || 'http://127.0.0.1:6185'
+  return config.baseUrl || 'https://api.2pixel.cn'
 }
 
 function parseNumber(value: unknown): number | undefined {
@@ -130,7 +130,7 @@ export async function login(username: string, password: string): Promise<TwoPixe
       
       // Sync token to main process platform adapter
       if ((window as any).electronAPI?.syncTwoPixelToken) {
-        (window as any).electronAPI.syncTwoPixelToken(data.token)
+        (window as any).electronAPI.syncTwoPixelToken(data.token, user.user_id)
       }
       
       return {
@@ -163,11 +163,19 @@ export async function sendVerificationCode(email: string): Promise<{ success: bo
       body: JSON.stringify({ email }),
     })
 
-    const data = await response.json()
-    if (data.success) {
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}))
+      return { success: false, error: errData.error || errData.message || '发送验证码失败，请重试' }
+    }
+
+    const data = await response.json().catch(() => ({}))
+    
+    // Gateway might return {"message": "..."} instead of success
+    if (data.success || data.message) {
       return { success: true }
     }
-    return { success: false, error: data.error || 'Failed to send verification code' }
+
+    return { success: false, error: data.error || data.message || '发送验证码失败' }
   } catch (error) {
     console.error('[TwoPixelAuth] Send code error:', error)
     return { success: false, error: 'Network error, please check your connection' }
@@ -191,33 +199,37 @@ export async function register(
 
     const data = await response.json()
 
-    if (data.success && data.token) {
-      localStorage.setItem(TOKEN_STORAGE_KEY, data.token)
+    // Support both { success: true, token: "..." } and { access_token: "..." }
+    const token = data.access_token || data.token
+    
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token)
       const user: TwoPixelUser = {
-        user_id: data.user_id || username,
-        username: data.username || username,
-        email: data.email || email,
-        balance: data.balance || 10,
-        is_admin: data.is_admin || false,
+        user_id: data.user?.id || data.user_id || username,
+        username: data.user?.username || data.username || username,
+        email: data.user?.email || data.email || email,
+        balance: data.user?.balance || data.balance || 10,
+        is_admin: data.user?.is_admin || data.is_admin || false,
       }
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
       localStorage.setItem(BALANCE_STORAGE_KEY, String(user.balance || 10))
       localStorage.setItem(IS_ADMIN_STORAGE_KEY, String(user.is_admin ? 1 : 0))
       
+      // Sync token to main process platform adapter
       if ((window as any).electronAPI?.syncTwoPixelToken) {
-        (window as any).electronAPI.syncTwoPixelToken(data.token)
+        (window as any).electronAPI.syncTwoPixelToken(token, user.user_id)
       }
       
       return {
         success: true,
-        token: data.token,
+        token,
         user,
       }
     }
 
     return {
       success: false,
-      error: data.error || '注册失败',
+      error: data.error || data.message || '注册失败',
     }
   } catch (error) {
     console.error('[TwoPixelAuth] Register error:', error)
@@ -278,7 +290,7 @@ export function logout(): void {
   localStorage.removeItem(IS_ADMIN_STORAGE_KEY)
   
   if ((window as any).electronAPI?.syncTwoPixelToken) {
-    (window as any).electronAPI.syncTwoPixelToken(null)
+    (window as any).electronAPI.syncTwoPixelToken(null, null)
   }
 }
 
@@ -319,25 +331,33 @@ export async function fetchAccountOverview(): Promise<TwoPixelAccountOverview> {
   const storedUser = getUser()
   const storedBalance = getBalance()
 
-  let profileResponse = null
-  let usageResponse = null
+  let profileResponse: any = null
+  let usageResponse: any = null
+  let quotaResponse: any = null
 
   try {
     const results = await Promise.allSettled([
-      fetchAuthorizedJson('/api/user/profile'),
-      fetchAuthorizedJson('/api/user/usage'),
+      fetchAuthorizedJson('/api/user/balance'),
+      fetchAuthorizedJson('/api/user/quota'),
+      fetchAuthorizedJson('/api/v1/usage/summary'),
     ])
 
     if (results[0].status === 'fulfilled') {
       profileResponse = results[0].value
     } else {
-      console.warn('[TwoPixelAuth] Profile fetch failed:', results[0].reason)
+      console.warn('[TwoPixelAuth] Balance fetch failed:', results[0].reason)
     }
 
     if (results[1].status === 'fulfilled') {
-      usageResponse = results[1].value
+      quotaResponse = results[1].value 
     } else {
-      console.warn('[TwoPixelAuth] Usage fetch failed:', results[1].reason)
+      console.warn('[TwoPixelAuth] Quota fetch failed:', results[1].reason)
+    }
+    
+    if (results[2].status === 'fulfilled') {
+      usageResponse = results[2].value 
+    } else {
+      console.warn('[TwoPixelAuth] Usage summary fetch failed:', results[2].reason)
     }
   } catch (error) {
     console.error('[TwoPixelAuth] Error fetching account overview:', error)
@@ -350,8 +370,8 @@ export async function fetchAccountOverview(): Promise<TwoPixelAccountOverview> {
     storedBalance,
   ) ?? 0
 
-  const quotaLimit = 10.0 // Currently hardcoded or maybe we can fetch if API supports
-  const quotaUsed = 0
+  const quotaLimit = pickNumber(quotaResponse?.quota, quotaResponse?.limit) ?? 10.0
+  const quotaUsed = pickNumber(quotaResponse?.used_quota, quotaResponse?.used) ?? 0
 
   const todayCost = pickNumber(
     usageResponse?.today?.total_cost,

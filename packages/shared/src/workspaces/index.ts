@@ -39,4 +39,6 @@ export {
   // Constants
   CONFIG_DIR,
   DEFAULT_WORKSPACES_DIR,
+  getActiveUserId,
+  setActiveUserId,
 } from './storage.ts';

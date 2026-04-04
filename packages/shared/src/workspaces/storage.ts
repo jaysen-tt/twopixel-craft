@@ -46,6 +46,42 @@ const DEFAULT_WORKSPACES_DIR = join(CONFIG_DIR, 'workspaces');
 // Path Utilities
 // ============================================================
 
+let cachedUserId: string | null | undefined = undefined;
+
+/**
+ * Get the currently active TwoPixel user ID for data isolation
+ */
+export function getActiveUserId(): string | null {
+  if (cachedUserId !== undefined) return cachedUserId || null;
+  try {
+    const path = join(CONFIG_DIR, 'active_user.json');
+    if (existsSync(path)) {
+      const data = JSON.parse(readFileSync(path, 'utf8'));
+      cachedUserId = data.userId || null;
+      return cachedUserId;
+    }
+  } catch (e) {}
+  cachedUserId = null;
+  return null;
+}
+
+/**
+ * Set the currently active TwoPixel user ID (called on login/logout)
+ */
+export function setActiveUserId(userId: string | null): void {
+  cachedUserId = userId;
+  try {
+    const path = join(CONFIG_DIR, 'active_user.json');
+    if (userId) {
+      writeFileSync(path, JSON.stringify({ userId }));
+    } else if (existsSync(path)) {
+      rmSync(path);
+    }
+  } catch (e) {
+    console.error('[workspace-storage] Failed to save active_user.json:', e);
+  }
+}
+
 /**
  * Get the default workspaces directory (~/.twopixel/workspaces/)
  */
@@ -84,6 +120,10 @@ export function getWorkspaceSourcesPath(rootPath: string): string {
  * @param rootPath - Absolute path to workspace root folder
  */
 export function getWorkspaceSessionsPath(rootPath: string): string {
+  const userId = getActiveUserId();
+  if (userId) {
+    return join(rootPath, `sessions_${userId}`);
+  }
   return join(rootPath, 'sessions');
 }
 

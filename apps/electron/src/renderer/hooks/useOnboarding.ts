@@ -835,8 +835,12 @@ export function useOnboarding({
         console.error('[Onboarding] Failed to setup TwoPixel LLM connection:', error)
       }
       
-      // Skip onboarding - go directly to main app
-      onComplete()
+      // Relaunch the app to cleanly initialize the user's isolated workspace/sessions
+      if ((window.electronAPI as any).relaunch) {
+        await (window.electronAPI as any).relaunch()
+      } else {
+        onComplete()
+      }
     }
   }, [onComplete])
 
@@ -860,8 +864,12 @@ export function useOnboarding({
         console.error('[Onboarding] Failed to setup TwoPixel LLM connection:', error)
       }
       
-      // Skip onboarding - go directly to main app
-      onComplete()
+      // Relaunch the app to cleanly initialize the user's isolated workspace/sessions
+      if ((window.electronAPI as any).relaunch) {
+        await (window.electronAPI as any).relaunch()
+      } else {
+        onComplete()
+      }
     }
   }, [onComplete])
 

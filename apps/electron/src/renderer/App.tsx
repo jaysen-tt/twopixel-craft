@@ -35,7 +35,7 @@ import { navigate, routes } from './lib/navigate'
 import { stripMarkdown } from './utils/text'
 import { getSessionsToRefreshAfterStaleReconnect } from './lib/reconnect-recovery'
 import { formatSessionLoadFailure, shouldTreatSessionLoadFailureAsTransportFallback } from './lib/session-load'
-import { getToken, isAuthenticated } from '@/lib/twopixel-auth'
+import { getToken, getUser, isAuthenticated } from '@/lib/twopixel-auth'
 import { extractWorkspaceSlugFromPath } from '@craft-agent/shared/utils/workspace-slug'
 import { DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
 import { initRendererPerf } from './lib/perf'
@@ -101,7 +101,8 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
 
 async function ensureTwoPixelBuiltInCredential(): Promise<void> {
   const token = getToken()
-  if (!token) return
+  const user = getUser()
+  if (!token || !user) return
 
   try {
     await window.electronAPI.setupLlmConnection({
@@ -111,7 +112,7 @@ async function ensureTwoPixelBuiltInCredential(): Promise<void> {
     
     // Sync token to main process platform adapter
     if ((window.electronAPI as any).syncTwoPixelToken) {
-      (window.electronAPI as any).syncTwoPixelToken(token)
+      (window.electronAPI as any).syncTwoPixelToken(token, user.user_id)
     }
   } catch (error) {
     console.warn('[TwoPixel] Failed to sync built-in LLM credential:', error)
@@ -645,6 +646,8 @@ export default function App() {
 
   // Check auth state and get window's workspace ID on mount
   useEffect(() => {
+    let isMounted = true
+
     const initialize = async () => {
       try {
         // Check TwoPixel authentication first
@@ -652,8 +655,10 @@ export default function App() {
         
         if (!isLoggedIn) {
           // User not logged in - show login step in onboarding
-          onboarding.reset('login')
-          setAppState('onboarding')
+          if (isMounted && appState !== 'onboarding') {
+            onboarding.reset('login')
+            setAppState('onboarding')
+          }
           return
         }
 
@@ -666,24 +671,37 @@ export default function App() {
           3000,
           'Timed out while resolving window workspace'
         ).catch(() => null)
+        
+        if (!isMounted) return
+        
         setWindowWorkspaceId(wsId)
 
         // Skip onboarding for logged-in users - go directly to main app
-        if (!wsId) {
+        if (!wsId && appState !== 'workspace-picker') {
           setAppState('workspace-picker')
-        } else {
+        } else if (wsId && appState !== 'ready') {
           setAppState('ready')
         }
       } catch (error) {
         console.error('Failed to check auth state:', error)
         // If check fails, show onboarding to be safe
-        onboarding.reset('login')
-        setAppState('onboarding')
+        if (isMounted && appState !== 'onboarding') {
+          onboarding.reset('login')
+          setAppState('onboarding')
+        }
       }
     }
 
-    initialize()
-  }, [initialWorkspaceId, onboarding, setWindowWorkspaceId])
+    // Only run initialization if we're not already ready
+    if (appState !== 'ready' && appState !== 'workspace-picker') {
+      initialize()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialWorkspaceId, setWindowWorkspaceId, appState])
 
   // Session selection state
   const [sessionSelection, setSession] = useSession()
@@ -1562,50 +1580,51 @@ export default function App() {
   const handleLogout = useCallback(async () => {
     try {
       clearTwoPixelAuthState()
-      await window.electronAPI.logout()
-      // Reset all state
-      initializeSessions([])
-      setWorkspaces([])
-      setWindowWorkspaceId(null)
-      // Reset setupNeeds to force fresh onboarding start
-      setSetupNeeds({
-        needsBillingConfig: true,
-        needsCredentials: true,
-        isFullyConfigured: false,
-      })
-      // Reset onboarding hook state
-      onboarding.reset('login')
-      setAppState('onboarding')
+      // Relaunch the app entirely to ensure a clean session state for the next user
+      if ((window.electronAPI as any).relaunch) {
+        await (window.electronAPI as any).relaunch()
+      } else {
+        // Fallback: reset all state if relaunch is not available
+        initializeSessions([])
+        setWorkspaces([])
+        setWindowWorkspaceId(null)
+        setSetupNeeds({
+          needsBillingConfig: true,
+          needsCredentials: true,
+          isFullyConfigured: false,
+        })
+        setAppState('onboarding')
+      }
     } catch (error) {
       console.error('Logout failed:', error)
     }
-  }, [onboarding, initializeSessions])
+  }, [initializeSessions])
 
   // Execute reset after user confirms in dialog
   const executeReset = useCallback(async () => {
     try {
       clearTwoPixelAuthState()
       await window.electronAPI.resetApp()
-      // Reset all state
-      // Clear session atoms - initialize with empty array clears all per-session atoms
-      initializeSessions([])
-      setWorkspaces([])
-      setWindowWorkspaceId(null)
-      // Reset setupNeeds to force fresh onboarding start
-      setSetupNeeds({
-        needsBillingConfig: true,
-        needsCredentials: true,
-        isFullyConfigured: false,
-      })
-      // Reset onboarding hook state
-      onboarding.reset('login')
-      setAppState('onboarding')
+      // Relaunch app to apply reset
+      if ((window.electronAPI as any).relaunch) {
+        await (window.electronAPI as any).relaunch()
+      } else {
+        initializeSessions([])
+        setWorkspaces([])
+        setWindowWorkspaceId(null)
+        setSetupNeeds({
+          needsBillingConfig: true,
+          needsCredentials: true,
+          isFullyConfigured: false,
+        })
+        setAppState('onboarding')
+      }
     } catch (error) {
       console.error('Reset failed:', error)
     } finally {
       setShowResetDialog(false)
     }
-  }, [onboarding, initializeSessions])
+  }, [initializeSessions])
 
   // Handle workspace selection
   // - Default: switch workspace in same window (in-window switching)
