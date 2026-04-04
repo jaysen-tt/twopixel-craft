@@ -174,6 +174,9 @@ function resolveServerPath(hostRuntime: BackendHostRuntimeContext, serverName: s
       join(hostRuntime.appRootPath, 'dist', 'resources', serverName, 'index.js'),
     ]);
   }
+  const fromHostRoot = resolveUpwards(hostRuntime.appRootPath, join('packages', serverName, 'dist', 'index.js'), 10);
+  if (fromHostRoot) return fromHostRoot;
+
   return resolveUpwards(
     hostRuntime.appRootPath,
     join('packages', serverName, 'dist', 'index.js'),
