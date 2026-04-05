@@ -215,7 +215,9 @@ function createComponents(
       ),
       th: ({ children }) => <th className="text-left pr-4">{children}</th>,
       td: ({ children }) => <td className="pr-4">{children}</td>,
-    }
+      markdown: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+      thinking: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    } as Partial<Components>
   }
 
   // Minimal mode: clean with syntax highlighting
@@ -346,7 +348,9 @@ function createComponents(
       // Strong/emphasis
       strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
       em: ({ children }) => <em className="italic">{children}</em>,
-    }
+      markdown: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+      thinking: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    } as Partial<Components>
   }
 
   // Full mode: rich styling
@@ -485,9 +489,10 @@ function createComponents(
     strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
     em: ({ children }) => <em className="italic">{children}</em>,
     del: ({ children }) => <del className="line-through text-muted-foreground">{children}</del>,
-    // Handle unknown <markdown> tags that may come through rehype-raw
-    // Type assertion needed because 'markdown' is not a standard HTML element
+    // Handle unknown tags that may come through rehype-raw
+    // Type assertion needed because these are not standard HTML elements
     markdown: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    thinking: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   } as Partial<Components>
 }
 

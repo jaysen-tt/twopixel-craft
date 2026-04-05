@@ -76,6 +76,9 @@ export default defineConfig({
         target: 'https://api.2pixel.cn',
         changeOrigin: true,
         secure: false,
+        headers: {
+          'Origin': 'https://api.2pixel.cn'
+        }
       }
     }
   }
