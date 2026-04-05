@@ -129,13 +129,33 @@ export function getWorkspaceSessionsPath(rootPath: string): string {
     const newPath = join(rootPath, `sessions_${userId}`);
     const oldPath = join(rootPath, 'sessions');
 
-    // Migration logic: If the user's specific sessions folder doesn't exist,
-    // but the generic 'sessions' folder does (from before multi-user isolation),
-    // we rename it to belong to this user to prevent data loss.
-    if (!existsSync(newPath) && existsSync(oldPath)) {
+    // Migration logic:
+    // If old generic 'sessions' exists, we should migrate its contents to the new user-specific path
+    if (existsSync(oldPath)) {
       try {
-        renameSync(oldPath, newPath);
-        console.log(`[workspace-storage] Migrated old sessions folder to ${newPath}`);
+        if (!existsSync(newPath)) {
+          // If new path doesn't exist at all, simply rename
+          renameSync(oldPath, newPath);
+          console.log(`[workspace-storage] Migrated old sessions folder to ${newPath}`);
+        } else {
+          // If new path exists (e.g. user created some new sessions before this fix),
+          // merge the old sessions into the new path, then rename oldPath to prevent re-merging
+          const oldEntries = readdirSync(oldPath, { withFileTypes: true });
+          let mergedCount = 0;
+          for (const entry of oldEntries) {
+            if (entry.isDirectory() && entry.name !== '.DS_Store') {
+              const oldSessionDir = join(oldPath, entry.name);
+              const newSessionDir = join(newPath, entry.name);
+              if (!existsSync(newSessionDir)) {
+                renameSync(oldSessionDir, newSessionDir);
+                mergedCount++;
+              }
+            }
+          }
+          // Rename the old sessions folder to indicate it was migrated
+          renameSync(oldPath, oldPath + '_migrated');
+          console.log(`[workspace-storage] Merged ${mergedCount} old sessions into ${newPath}`);
+        }
       } catch (e) {
         console.error(`[workspace-storage] Failed to migrate sessions folder:`, e);
       }

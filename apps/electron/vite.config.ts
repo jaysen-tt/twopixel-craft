@@ -70,6 +70,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: false
+    open: false,
+    proxy: {
+      '/api': {
+        target: 'https://api.2pixel.cn',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 })

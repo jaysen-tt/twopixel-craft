@@ -4,7 +4,7 @@ export interface ApiClientConfig {
 }
 
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseUrl: 'https://api.2pixel.cn',
+  baseUrl: import.meta.env.DEV ? 'http://localhost:5173' : 'https://api.2pixel.cn',
   timeout: 30000,
 }
 
@@ -15,10 +15,12 @@ export function setApiClientConfig(config: Partial<ApiClientConfig>): void {
 }
 
 export function getApiClientConfig(): ApiClientConfig {
-  return {
+  const config = {
     ...DEFAULT_CONFIG,
     ...customConfig,
   }
+  console.log('[ApiClientConfig] Resolved config:', config, 'DEV:', import.meta.env.DEV)
+  return config
 }
 
 export function resetApiClientConfig(): void {
