@@ -81,7 +81,10 @@ export async function fetchAuthorizedJson(endpoint: string): Promise<any> {
 
   // Use the standard HTTP backend port 6185 (or base url) instead of LLM proxy 16686
   let url = endpoint
-  if (url.startsWith('/api/')) {
+  // When using Vite proxy, we don't prepend getBaseUrl() if it's already a relative path starting with /api/
+  if (url.startsWith('/api/') && import.meta.env.DEV) {
+    // Keep it relative to hit the Vite proxy
+  } else if (url.startsWith('/api/')) {
     url = `${getBaseUrl()}${url}`
   } else if (!url.startsWith('http')) {
     url = `${getBaseUrl()}${url.startsWith('/') ? '' : '/'}${url}`
@@ -105,7 +108,8 @@ export async function fetchAuthorizedJson(endpoint: string): Promise<any> {
 
 export async function login(username: string, password: string): Promise<TwoPixelAuthResult> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/auth/login`, {
+    const url = import.meta.env.DEV ? '/api/auth/login' : `${getBaseUrl()}/api/auth/login`
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -155,7 +159,8 @@ export async function login(username: string, password: string): Promise<TwoPixe
 
 export async function sendVerificationCode(email: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/auth/send-code`, {
+    const url = import.meta.env.DEV ? '/api/auth/send-code' : `${getBaseUrl()}/api/auth/send-code`
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -189,7 +194,8 @@ export async function register(
   code: string,
 ): Promise<TwoPixelAuthResult> {
   try {
-    const response = await fetch(`${getBaseUrl()}/api/auth/register`, {
+    const url = import.meta.env.DEV ? '/api/auth/register' : `${getBaseUrl()}/api/auth/register`
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
